@@ -1,2 +1,3 @@
-export * from './index'
+export * from './walker'
 export * from './refs'
+export * from './types'

@@ -9,7 +9,7 @@
   "scripts": {
     "prepare": "npm test && npm run build",
     "clean": "rm -rf dist",
-    "build": "npm run clean && tsc --declaration --project tsconfig.build.json",
+    "build": "npm run clean && tsc --declaration",
     "test": "jest",
     "lint": "eslint src/**"
   },

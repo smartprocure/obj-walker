@@ -28,6 +28,17 @@ export interface Node {
 }
 ```
 
+and `options` can be:
+
+```typescript
+export interface Options {
+  postOrder?: boolean
+  leavesOnly?: boolean
+  jsonCompat?: boolean
+  traverse?(x: any): boolean
+}
+```
+
 ```typescript
 const obj = {
   a: {
@@ -58,6 +69,11 @@ Similar to `mapLeaves`, but receives all nodes, not just the leaves.
 ```typescript
 map(obj: object, mapFn: Mapper, options?: Options) => object
 ```
+
+Notice the custom `traverse` fn. This determines when
+to traverse into an object or array. By default, we only
+traverse into plain objects and arrays. All other objects,
+such as `Date`, would not be traversed.
 
 ```typescript
 const obj = {
