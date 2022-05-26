@@ -15,6 +15,10 @@ option to `true`.
 
 ## walk
 
+```typescript
+walk(obj: object, options: Options = {}) => Node[] 
+```
+
 Walk an object. Returns an array of all nodes in the object in either
 preorder or postorder.
 
