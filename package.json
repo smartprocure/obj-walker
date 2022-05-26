@@ -1,5 +1,5 @@
 {
-  "name": "tree-map",
+  "name": "obj-walker",
   "version": "0.0.1",
   "description": "Map over an object preorder or postorder",
   "author": "David Sargeant",

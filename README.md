@@ -1,4 +1,8 @@
-# tree-map
+# obj-walker
+
+Walk objects like this guy.
+
+<img src="./chuck-norris.jpg" alt="Walker, Texas Ranger" width="200"/>
 
 Map over an object in a preorder or postoder depth-first manner.
 Also, provides functions for serializing and deserializng
@@ -8,6 +12,60 @@ This library is designed to work well with functions that traverse
 an object in the same way `JSON.stringify` and `JSON.parse` do. Namely,
 preorder and postorder. To mimic that behavior entirely set the `jsonCompat`
 option to `true`.
+
+## walk
+
+Walk an object. Returns an array of all nodes in the object in either
+preorder or postorder.
+
+```typescript
+const obj = {
+  a: {
+    b: 23,
+    c: 24,
+  },
+  d: {
+    e: 'Bob',
+    f: [10, 20, 30],
+  },
+}
+walk(obj)
+```
+
+produces:
+
+```typescript
+[
+  {
+    key: undefined,
+    parents: [],
+    val: { a: { b: 23, c: 24 }, d: { e: 'Bob', f: [10, 20, 30] } },
+    path: [],
+    isRoot: true,
+    isLeaf: false,
+  },
+  {
+    key: 'a',
+    val: { b: 23, c: 24 },
+    parents: [{ a: { b: 23, c: 24 }, d: { e: 'Bob', f: [10, 20, 30] } }],
+    path: ['a'],
+    isLeaf: false,
+    isRoot: false,
+  },
+  {
+    key: 'b',
+    val: 23,
+    parents: [
+      { b: 23, c: 24 },
+      { a: { b: 23, c: 24 }, d: { e: 'Bob', f: [10, 20, 30] } },
+    ],
+    path: ['a', 'b'],
+    isLeaf: true,
+    isRoot: false,
+  },
+  ...
+]
+```
 
 ## mapLeaves
 
