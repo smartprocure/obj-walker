@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Map over an object preorder or postorder",
   "author": "David Sargeant",
-  "repository": "git://github.com/dubiousdavid/tree-map.git",
+  "repository": "git://github.com/dubiousdavid/obj-walker.git",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
