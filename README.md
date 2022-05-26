@@ -23,6 +23,8 @@ Walk an object. Returns an array of all nodes in the object in either
 preorder or postorder.
 
 ```typescript
+import { walk } from 'obj-walker'
+
 const obj = {
   a: {
     b: 23,
@@ -102,6 +104,8 @@ export interface Options {
 ```
 
 ```typescript
+import { mapLeaves } from 'obj-walker'
+
 const obj = {
   a: {
     b: 23,
@@ -138,6 +142,8 @@ traverse into plain objects and arrays. All other objects,
 such as `Date`, would not be traversed.
 
 ```typescript
+import { map } from 'obj-walker'
+
 const obj = {
   a: {
     b: 23,
@@ -178,6 +184,8 @@ addRefs(obj: object, options?: RefOptions): object
 ```
 
 ```typescript
+import { addRefs } from 'obj-walker'
+
 const apiOutput = {
   1: 'foo',
   2: 'bar',
@@ -229,6 +237,8 @@ deref(obj: object, options?: RefOptions): object
 ```
 
 ```typescript
+import { deref } from 'obj-walker'
+
 const obj = {
   api: {
     input: [1, 2, 3],
