@@ -6,6 +6,10 @@ export const isObjectOrArray = _.overSome([_.isPlainObject, _.isArray])
 const defTraverse = (x: any) => isObjectOrArray(x) && !_.isEmpty(x)
 const isLeaf = (x: any) => !isObjectOrArray(x)
 
+/**
+ * Walk an object depth-first in a preorder (default) or
+ * postorder manner. Returns an array of nodes.
+ */
 export const walk = (obj: object, options: Options = {}) => {
   const { postOrder, jsonCompat, traverse = defTraverse } = options
   // Recursively walk object
@@ -51,6 +55,10 @@ export const walk = (obj: object, options: Options = {}) => {
   return nodes
 }
 
+/**
+ * Map over an object with a fn depth-first in a preorder (default)
+ * or postorder manner. Exclude nodes by returning undefined.
+ */
 export const map = (obj: object, mapFn: Mapper, options?: Options) => {
   if (!isObjectOrArray(obj)) {
     return obj
@@ -67,5 +75,9 @@ export const map = (obj: object, mapFn: Mapper, options?: Options) => {
   return result
 }
 
+/**
+ * Map over the leaves of an object with a fn. Exclude nodes by returning
+ * undefined.
+ */
 export const mapLeaves = (obj: object, mapFn: Mapper, options?: Options) =>
   map(obj, mapFn, { ...options, leavesOnly: true })
