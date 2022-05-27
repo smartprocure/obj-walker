@@ -5,7 +5,8 @@ import { Node, RefOptions } from './types'
 export const addRefs = (obj: object, options?: RefOptions) => {
   const fn = decycle()
   const mapper = ({ key, val, parents, isLeaf }: Node) => {
-    if (isLeaf) return
+    // Ignore nested leaves
+    if (isLeaf && parents.length > 1) return
     return fn.call(parents[0], key ?? '', val)
   }
   return map(obj, mapper, { ...options, jsonCompat: true })
