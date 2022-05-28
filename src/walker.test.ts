@@ -1,6 +1,6 @@
 import _ from 'lodash/fp'
 import { describe, expect, test } from '@jest/globals'
-import { walk, map, mapLeaves } from './walker'
+import { walk, map, mapKV, mapLeaves } from './walker'
 
 describe('walk', () => {
   test('walk with no options', () => {
@@ -270,12 +270,7 @@ describe('map', () => {
     }
     const result = map(
       obj,
-      ({ val }) => {
-        if (Array.isArray(val)) {
-          return _.compact(val)
-        }
-        return val
-      },
+      ({ val }) => (Array.isArray(val) ? _.compact(val) : val),
       { traverse: (x: any) => _.isPlainObject(x) && x }
     )
     expect(result).toEqual({
@@ -315,6 +310,40 @@ describe('map', () => {
       { postOrder: true }
     )
     expect(result).toEqual({ a: { b: 24, c: 25 }, d: { f: [11, 21, 31] } })
+  })
+})
+
+describe('mapKV', () => {
+  test('should modify keys and values', () => {
+    const obj = {
+      bob: {
+        age: 17,
+        scores: [95, 96, 83],
+      },
+      joe: {
+        age: 16,
+        scores: [87, 82, 77],
+      },
+      frank: {
+        age: 16,
+        scores: [78, 85, 89],
+      },
+    }
+    const result = mapKV(
+      obj,
+      ({ key, val }) => {
+        if (key === 'scores') {
+          return ['testScores', val.map((x: number) => x + 1)]
+        }
+        return [key, val]
+      },
+      { traverse: (x: any) => _.isPlainObject(x) && x }
+    )
+    expect(result).toEqual({
+      bob: { age: 17, testScores: [96, 97, 84] },
+      joe: { age: 16, testScores: [88, 83, 78] },
+      frank: { age: 16, testScores: [79, 86, 90] },
+    })
   })
 })
 

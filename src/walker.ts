@@ -1,6 +1,6 @@
-import { set } from 'lodash'
+import { set, unset } from 'lodash'
 import _ from 'lodash/fp'
-import { Mapper, Options, Node } from './types'
+import { Mapper, MapperKV, Options, Node } from './types'
 
 export const isObjectOrArray = _.overSome([_.isPlainObject, _.isArray])
 const defTraverse = (x: any) => isObjectOrArray(x) && !_.isEmpty(x) && x
@@ -58,8 +58,9 @@ export const walk = (obj: object, options: Options = {}) => {
 }
 
 /**
- * Map over an object with a fn depth-first in a preorder (default)
- * or postorder manner. Exclude nodes by returning undefined.
+ * Map over an object modifying values with a fn depth-first in a
+ * preorder (default) or postorder manner. Exclude nodes by returning
+ * undefined.
  */
 export const map = (obj: object, mapFn: Mapper, options?: Options) => {
   if (!isObjectOrArray(obj)) {
@@ -72,6 +73,36 @@ export const map = (obj: object, mapFn: Mapper, options?: Options) => {
     const newVal = mapFn(node)
     if (newVal !== undefined) {
       set(result, node.path, newVal)
+    }
+  }
+  return result
+}
+
+/**
+ * Map over an object modifying keys and values with a fn depth-first in
+ * a preorder (default) or postorder manner. Exclude nodes by returning
+ * undefined.
+ */
+export const mapKV = (obj: object, mapFn: MapperKV, options?: Options) => {
+  if (!isObjectOrArray(obj)) {
+    return obj
+  }
+  const nodes = walk(obj, options)
+  // console.dir(nodes, {depth: 10})
+  const result = _.isPlainObject(obj) ? {} : []
+  for (const node of nodes) {
+    const newKV = mapFn(node)
+    if (newKV !== undefined) {
+      const path = node.path
+      const [key, val] = newKV
+      // Remove old path
+      unset(result, path)
+      if (key !== undefined) {
+        // New path
+        path[path.length - 1] = key
+        // Set val for new apth
+        set(result, path, val)
+      }
     }
   }
   return result

@@ -17,3 +17,4 @@ export interface Node {
 }
 
 export type Mapper = (node: Node) => any
+export type MapperKV = (node: Node) => [string | undefined, any] | undefined
