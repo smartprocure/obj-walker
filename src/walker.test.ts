@@ -174,28 +174,82 @@ describe('walk', () => {
   })
   test('walk with custom traverse fn', () => {
     const obj = {
-      api: {
-        input: [1, 2, 3],
-        output: { '1': 'foo', '2': 'bar', '3': 'baz' },
+      bsonType: 'object',
+      additionalProperties: false,
+      required: ['name', 'type'],
+      properties: {
+        _id: {
+          bsonType: 'objectId',
+        },
+        name: { bsonType: 'string' },
+        numberOfEmployees: {
+          bsonType: 'string',
+          enum: ['1 - 5', '6 - 20', '21 - 50', '51 - 200', '201 - 500', '500+'],
+        },
+        addresses: {
+          bsonType: 'array',
+          items: {
+            bsonType: 'object',
+            additionalProperties: false,
+            properties: {
+              address: {
+                bsonType: 'object',
+                additionalProperties: false,
+                properties: {
+                  street: { bsonType: 'string' },
+                  city: { bsonType: 'string' },
+                  county: { bsonType: 'string' },
+                  state: { bsonType: 'string' },
+                  zip: { bsonType: 'string' },
+                  country: { bsonType: 'string' },
+                },
+              },
+              name: { bsonType: 'string' },
+              isPrimary: { bsonType: 'bool' },
+            },
+          },
+        },
+        integrations: {
+          bsonType: 'object',
+          additionalProperties: true,
+          properties: {
+            stripe: {
+              bsonType: 'object',
+              additionalProperties: true,
+              properties: {
+                priceId: {
+                  bsonType: 'string',
+                },
+                subscriptionStatus: {
+                  bsonType: 'string',
+                },
+              },
+            },
+          },
+        },
       },
-      details: {
-        input: { '1': 'foo', '2': 'bar', '3': 'baz' },
-        output: { '1': 'bla', '2': 'bla', '3': 'bla' },
-      },
-      writeToDB: { input: { '1': 'bla', '2': 'bla', '3': 'bla' } },
     }
-    const traverse = (x: any) => x.input || x.output
-    const nodes = walk(obj, { traverse }).map((x) => x.path)
-    expect(nodes).toEqual([
+    const traverse = (x: any) => x.properties || x.items?.properties
+    const paths = walk(obj, { traverse }).map((x) => x.path)
+    expect(paths).toEqual([
       [],
-      ['api'],
-      ['api', 'input'],
-      ['api', 'output'],
-      ['details'],
-      ['details', 'input'],
-      ['details', 'output'],
-      ['writeToDB'],
-      ['writeToDB', 'input'],
+      ['_id'],
+      ['name'],
+      ['numberOfEmployees'],
+      ['addresses'],
+      ['addresses', 'address'],
+      ['addresses', 'address', 'street'],
+      ['addresses', 'address', 'city'],
+      ['addresses', 'address', 'county'],
+      ['addresses', 'address', 'state'],
+      ['addresses', 'address', 'zip'],
+      ['addresses', 'address', 'country'],
+      ['addresses', 'name'],
+      ['addresses', 'isPrimary'],
+      ['integrations'],
+      ['integrations', 'stripe'],
+      ['integrations', 'stripe', 'priceId'],
+      ['integrations', 'stripe', 'subscriptionStatus'],
     ])
   })
 })
@@ -212,6 +266,7 @@ describe('map', () => {
         f: [10, null, 30, undefined, 40],
       },
       g: [25, ''],
+      h: 'Frank',
     }
     const result = map(
       obj,
@@ -221,12 +276,13 @@ describe('map', () => {
         }
         return val
       },
-      { traverse: _.isPlainObject }
+      { traverse: (x: any) => _.isPlainObject(x) && x }
     )
     expect(result).toEqual({
       a: { b: 23, c: 24 },
       d: { e: 'Bob', f: [10, 30, 40] },
       g: [25],
+      h: 'Frank',
     })
   })
   test('map over leaves (post order)', () => {

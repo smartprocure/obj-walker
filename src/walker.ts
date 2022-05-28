@@ -3,8 +3,7 @@ import _ from 'lodash/fp'
 import { Mapper, Options, Node } from './types'
 
 export const isObjectOrArray = _.overSome([_.isPlainObject, _.isArray])
-const defTraverse = (x: any) => isObjectOrArray(x) && !_.isEmpty(x)
-const isLeaf = (x: any) => !isObjectOrArray(x)
+const defTraverse = (x: any) => isObjectOrArray(x) && !_.isEmpty(x) && x
 
 /**
  * Walk an object depth-first in a preorder (default) or
@@ -12,6 +11,8 @@ const isLeaf = (x: any) => !isObjectOrArray(x)
  */
 export const walk = (obj: object, options: Options = {}) => {
   const { postOrder, jsonCompat, traverse = defTraverse } = options
+  // A leaf is a node that can't be traversed
+  const isLeaf = _.negate(traverse)
   // Recursively walk object
   const _walk = (obj: object, parents: any[], path: string[]) => {
     const nodes: Node[] = []
@@ -26,7 +27,8 @@ export const walk = (obj: object, options: Options = {}) => {
         isLeaf: isLeaf(val),
         isRoot: false,
       }
-      const childNodes = traverse(val) ? _walk(val, nodeParents, nodePath) : []
+      const next = traverse(val)
+      const childNodes = next ? _walk(next, nodeParents, nodePath) : []
       nodes.push(
         // Add child nodes before node for post order
         ...(postOrder ? childNodes : []),
@@ -38,7 +40,7 @@ export const walk = (obj: object, options: Options = {}) => {
     return nodes
   }
 
-  const nodes = _walk(obj, [], [])
+  const nodes = _walk(traverse(obj), [], [])
   // Filter the leaves
   if (options.leavesOnly) {
     return _.filter('isLeaf', nodes)
