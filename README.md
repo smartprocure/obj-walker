@@ -163,7 +163,7 @@ map(
     }
     return val
   },
-  { traverse: _.isPlainObject }
+  { traverse: (x: any) => _.isPlainObject(x) && x }
 )
 ```
 
