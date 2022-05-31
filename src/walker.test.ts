@@ -405,61 +405,6 @@ describe('walk', () => {
       { key: 'priceId', val: { bsonType: 'string' } },
       { key: 'subscriptionStatus', val: { bsonType: 'string' } },
     ])
-    // Mutate the tree, changing the key bsonType to type
-    nodes.forEach(({ val }) => {
-      val.type = val.bsonType
-      delete val.bsonType
-    })
-    expect(obj).toEqual({
-      additionalProperties: false,
-      required: ['name', 'type'],
-      properties: {
-        _id: { type: 'objectId' },
-        name: { type: 'string' },
-        numberOfEmployees: {
-          enum: ['1 - 5', '6 - 20', '21 - 50', '51 - 200', '201 - 500', '500+'],
-          type: 'string',
-        },
-        addresses: {
-          items: {
-            additionalProperties: false,
-            properties: {
-              address: {
-                additionalProperties: false,
-                properties: {
-                  street: { type: 'string' },
-                  city: { type: 'string' },
-                  county: { type: 'string' },
-                  state: { type: 'string' },
-                  zip: { type: 'string' },
-                  country: { type: 'string' },
-                },
-                type: 'object',
-              },
-              name: { type: 'string' },
-              isPrimary: { type: 'bool' },
-            },
-            type: 'object',
-          },
-          type: 'array',
-        },
-        integrations: {
-          additionalProperties: true,
-          properties: {
-            stripe: {
-              additionalProperties: true,
-              properties: {
-                priceId: { type: 'string' },
-                subscriptionStatus: { type: 'string' },
-              },
-              type: 'object',
-            },
-          },
-          type: 'object',
-        },
-      },
-      type: 'object',
-    })
   })
 
   test('mutate a tree after walking', () => {
