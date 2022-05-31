@@ -88,7 +88,6 @@ export const mapKV = (obj: object, mapFn: MapperKV, options?: Options) => {
     return obj
   }
   const nodes = walk(obj, options)
-  // console.dir(nodes, {depth: 10})
   const result = _.isPlainObject(obj) ? {} : []
   for (const node of nodes) {
     const newKV = mapFn(node)
@@ -100,7 +99,7 @@ export const mapKV = (obj: object, mapFn: MapperKV, options?: Options) => {
       if (key !== undefined) {
         // New path
         path[path.length - 1] = key
-        // Set val for new apth
+        // Set val for new path
         set(result, path, val)
       }
     }

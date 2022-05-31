@@ -198,12 +198,11 @@ const obj = {
     scores: [78, 85, 89],
   },
 }
-
 mapKV(
   obj,
   ({ key, val }) => {
-    if (key === 'scores') {
-      return ['testScores', val.map((x: number) => x + 1)]
+    if (key === 'age') {
+      return ['currentAge', val + 1]
     }
     return [key, val]
   },
@@ -215,9 +214,9 @@ produces:
 
 ```typescript
 {
-  bob: { age: 17, testScores: [96, 97, 84] },
-  joe: { age: 16, testScores: [88, 83, 78] },
-  frank: { age: 16, testScores: [79, 86, 90] },
+  bob: { currentAge: 18, scores: [95, 96, 83] },
+  joe: { currentAge: 17, scores: [87, 82, 77] },
+  frank: { currentAge: 17, scores: [78, 85, 89] },
 }
 ```
 
