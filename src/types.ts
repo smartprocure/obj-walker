@@ -13,6 +13,7 @@ export interface Node {
   parents: any[]
   path: string[]
   isLeaf: boolean
+  // Useful for postorder traversals to know when you're at the root
   isRoot: boolean
 }
 

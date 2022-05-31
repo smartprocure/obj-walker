@@ -16,7 +16,7 @@ option to `true`.
 ## walk
 
 ```typescript
-walk(obj: object, options: Options = {}) => Node[] 
+walk(obj: object, options: Options = {}) => Node[]
 ```
 
 Walk an object. Returns an array of all nodes in the object in either
@@ -71,6 +71,49 @@ produces:
   },
   ...
 ]
+```
+
+One of the more interesting uses of `walk` is mutating an object. For example,
+below I want to walk a MongoDB JSON schema and set additionalProperties to `true`
+wherever it exists. I traverse this tree using a custom `traverse` fn.
+
+```typescript
+const obj = {
+  bsonType: 'object',
+  additionalProperties: false,
+  required: ['name'],
+  properties: {
+    _id: {
+      bsonType: 'objectId',
+    },
+    name: { bsonType: 'string' },
+    addresses: {
+      bsonType: 'array',
+      items: {
+        bsonType: 'object',
+        additionalProperties: false,
+        properties: {
+          address: {
+            bsonType: 'object',
+            additionalProperties: false,
+            properties: {
+              zip: { bsonType: 'string' },
+              country: { bsonType: 'string' },
+            },
+          },
+        },
+      },
+    },
+  },
+}
+
+const traverse = (x: any) => x.properties || (x.items && { items: x.items })
+
+walk(obj, { traverse }).forEach(({ val }) => {
+  if (val.hasOwnProperty('additionalProperties')) {
+    val.additionalProperties = true
+  }
+})
 ```
 
 ## mapLeaves
@@ -136,10 +179,10 @@ Similar to `mapLeaves`, but receives all nodes, not just the leaves.
 map(obj: object, mapFn: Mapper, options?: Options) => object
 ```
 
-Notice the custom `traverse` fn. This determines when
+Notice the custom `traverse` fn. This determines how
 to traverse into an object or array. By default, we only
-traverse into plain objects and arrays. All other objects,
-such as `Date`, would not be traversed.
+traverse into plain objects and arrays and iterate over there
+key/value pairs.
 
 ```typescript
 import { map } from 'obj-walker'
