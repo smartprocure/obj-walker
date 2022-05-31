@@ -171,6 +171,56 @@ Produces:
 }
 ```
 
+## mapKV
+
+Map over an object, potentially changing keys and values. You must
+return a key/value pair like so `[key, val]`, otherwise the key will
+not be written to the return object/array.
+
+```typescript
+mapKV(obj: object, mapFn: MapperKV, options?: Options) => object
+
+type MapperKV = (node: Node) => [string | undefined, any] | undefined
+```
+
+```typescript
+const obj = {
+  bob: {
+    age: 17,
+    scores: [95, 96, 83],
+  },
+  joe: {
+    age: 16,
+    scores: [87, 82, 77],
+  },
+  frank: {
+    age: 16,
+    scores: [78, 85, 89],
+  },
+}
+
+mapKV(
+  obj,
+  ({ key, val }) => {
+    if (key === 'scores') {
+      return ['testScores', val.map((x: number) => x + 1)]
+    }
+    return [key, val]
+  },
+  { traverse: (x: any) => _.isPlainObject(x) && x }
+)
+```
+
+produces:
+
+```typescript
+{
+  bob: { age: 17, testScores: [96, 97, 84] },
+  joe: { age: 16, testScores: [88, 83, 78] },
+  frank: { age: 16, testScores: [79, 86, 90] },
+}
+```
+
 ## map
 
 Similar to `mapLeaves`, but receives all nodes, not just the leaves.
