@@ -631,7 +631,7 @@ describe('mapLeaves', () => {
       d: { e: 101, f: [11, 21, 31] },
     })
   })
-  test('should prune some leaves', () => {
+  test('should remove nulls from leaves', () => {
     const obj = {
       a: {
         b: 23,
@@ -639,19 +639,24 @@ describe('mapLeaves', () => {
       },
       d: {
         e: null,
-        f: [10, 20, 30],
+        f: [10, null, 30],
       },
     }
-    const result = mapLeaves(obj, ({ val }) => {
-      if (val !== null) return val
-    })
+    const result = mapLeaves(
+      obj,
+      ({ val }) => {
+        if (Array.isArray(val)) return _.compact(val)
+        if (val !== null) return val
+      },
+      { traverse: (x: any) => _.isPlainObject(x) && x }
+    )
     expect(result).toEqual({
       a: {
         b: 23,
         c: 24,
       },
       d: {
-        f: [10, 20, 30],
+        f: [10, 30],
       },
     })
   })
