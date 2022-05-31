@@ -2,7 +2,7 @@ export interface Options {
   postOrder?: boolean
   leavesOnly?: boolean
   jsonCompat?: boolean
-  traverse?(x: any): boolean
+  traverse?(x: any): any
 }
 
 export type RefOptions = Pick<Options, 'traverse'>

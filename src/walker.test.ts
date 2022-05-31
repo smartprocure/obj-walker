@@ -229,27 +229,180 @@ describe('walk', () => {
         },
       },
     }
-    const traverse = (x: any) => x.properties || x.items?.properties
-    const paths = walk(obj, { traverse }).map((x) => x.path)
-    expect(paths).toEqual([
-      [],
-      ['_id'],
-      ['name'],
-      ['numberOfEmployees'],
-      ['addresses'],
-      ['addresses', 'address'],
-      ['addresses', 'address', 'street'],
-      ['addresses', 'address', 'city'],
-      ['addresses', 'address', 'county'],
-      ['addresses', 'address', 'state'],
-      ['addresses', 'address', 'zip'],
-      ['addresses', 'address', 'country'],
-      ['addresses', 'name'],
-      ['addresses', 'isPrimary'],
-      ['integrations'],
-      ['integrations', 'stripe'],
-      ['integrations', 'stripe', 'priceId'],
-      ['integrations', 'stripe', 'subscriptionStatus'],
+    const traverse = (x: any) => x.properties || (x.items && { items: x.items })
+    const kvs = walk(obj, { traverse }).map(_.pick(['key', 'val']))
+    expect(kvs).toEqual([
+      {
+        key: undefined,
+        val: {
+          bsonType: 'object',
+          additionalProperties: false,
+          required: ['name', 'type'],
+          properties: {
+            _id: { bsonType: 'objectId' },
+            name: { bsonType: 'string' },
+            numberOfEmployees: {
+              bsonType: 'string',
+              enum: [
+                '1 - 5',
+                '6 - 20',
+                '21 - 50',
+                '51 - 200',
+                '201 - 500',
+                '500+',
+              ],
+            },
+            addresses: {
+              bsonType: 'array',
+              items: {
+                bsonType: 'object',
+                additionalProperties: false,
+                properties: {
+                  address: {
+                    bsonType: 'object',
+                    additionalProperties: false,
+                    properties: {
+                      street: { bsonType: 'string' },
+                      city: { bsonType: 'string' },
+                      county: { bsonType: 'string' },
+                      state: { bsonType: 'string' },
+                      zip: { bsonType: 'string' },
+                      country: { bsonType: 'string' },
+                    },
+                  },
+                  name: { bsonType: 'string' },
+                  isPrimary: { bsonType: 'bool' },
+                },
+              },
+            },
+            integrations: {
+              bsonType: 'object',
+              additionalProperties: true,
+              properties: {
+                stripe: {
+                  bsonType: 'object',
+                  additionalProperties: true,
+                  properties: {
+                    priceId: { bsonType: 'string' },
+                    subscriptionStatus: { bsonType: 'string' },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      { key: '_id', val: { bsonType: 'objectId' } },
+      { key: 'name', val: { bsonType: 'string' } },
+      {
+        key: 'numberOfEmployees',
+        val: {
+          bsonType: 'string',
+          enum: ['1 - 5', '6 - 20', '21 - 50', '51 - 200', '201 - 500', '500+'],
+        },
+      },
+      {
+        key: 'addresses',
+        val: {
+          bsonType: 'array',
+          items: {
+            bsonType: 'object',
+            additionalProperties: false,
+            properties: {
+              address: {
+                bsonType: 'object',
+                additionalProperties: false,
+                properties: {
+                  street: { bsonType: 'string' },
+                  city: { bsonType: 'string' },
+                  county: { bsonType: 'string' },
+                  state: { bsonType: 'string' },
+                  zip: { bsonType: 'string' },
+                  country: { bsonType: 'string' },
+                },
+              },
+              name: { bsonType: 'string' },
+              isPrimary: { bsonType: 'bool' },
+            },
+          },
+        },
+      },
+      {
+        key: 'items',
+        val: {
+          bsonType: 'object',
+          additionalProperties: false,
+          properties: {
+            address: {
+              bsonType: 'object',
+              additionalProperties: false,
+              properties: {
+                street: { bsonType: 'string' },
+                city: { bsonType: 'string' },
+                county: { bsonType: 'string' },
+                state: { bsonType: 'string' },
+                zip: { bsonType: 'string' },
+                country: { bsonType: 'string' },
+              },
+            },
+            name: { bsonType: 'string' },
+            isPrimary: { bsonType: 'bool' },
+          },
+        },
+      },
+      {
+        key: 'address',
+        val: {
+          bsonType: 'object',
+          additionalProperties: false,
+          properties: {
+            street: { bsonType: 'string' },
+            city: { bsonType: 'string' },
+            county: { bsonType: 'string' },
+            state: { bsonType: 'string' },
+            zip: { bsonType: 'string' },
+            country: { bsonType: 'string' },
+          },
+        },
+      },
+      { key: 'street', val: { bsonType: 'string' } },
+      { key: 'city', val: { bsonType: 'string' } },
+      { key: 'county', val: { bsonType: 'string' } },
+      { key: 'state', val: { bsonType: 'string' } },
+      { key: 'zip', val: { bsonType: 'string' } },
+      { key: 'country', val: { bsonType: 'string' } },
+      { key: 'name', val: { bsonType: 'string' } },
+      { key: 'isPrimary', val: { bsonType: 'bool' } },
+      {
+        key: 'integrations',
+        val: {
+          bsonType: 'object',
+          additionalProperties: true,
+          properties: {
+            stripe: {
+              bsonType: 'object',
+              additionalProperties: true,
+              properties: {
+                priceId: { bsonType: 'string' },
+                subscriptionStatus: { bsonType: 'string' },
+              },
+            },
+          },
+        },
+      },
+      {
+        key: 'stripe',
+        val: {
+          bsonType: 'object',
+          additionalProperties: true,
+          properties: {
+            priceId: { bsonType: 'string' },
+            subscriptionStatus: { bsonType: 'string' },
+          },
+        },
+      },
+      { key: 'priceId', val: { bsonType: 'string' } },
+      { key: 'subscriptionStatus', val: { bsonType: 'string' } },
     ])
   })
 })

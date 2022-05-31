@@ -1,3 +1,7 @@
+# 0.0.4
+
+* Fixed `traverse` type.
+
 # 0.0.3
 
 * Fixed `traverse` logic.
