@@ -471,6 +471,53 @@ describe('walk', () => {
       },
     })
   })
+
+  test('reduce a tree', () => {
+    const obj = {
+      joe: {
+        age: 16,
+        courses: {
+          math: {
+            scores: [95, 96, 87],
+          },
+          biology: {
+            scores: [97, 94, 87],
+          },
+        },
+      },
+      bob: {
+        age: 16,
+        courses: {
+          math: {
+            scores: [88, 87, 75],
+          },
+          biology: {
+            scores: [97, 94, 87],
+          },
+        },
+      },
+      frank: {
+        age: 15,
+        courses: {
+          math: {
+            scores: [90, 85, 73],
+          },
+          biology: {
+            scores: [89, 87, 73],
+          },
+        },
+      },
+    }
+    const nodes = walk(obj, { traverse: (x: any) => _.isPlainObject(x) && x })
+    const avg = _.flow(
+      _.filter({ key: 'scores' }),
+      _.flatMap('val'),
+      _.mean,
+      _.round
+    )(nodes)
+
+    expect(avg).toBe(88)
+  })
 })
 
 describe('map', () => {
