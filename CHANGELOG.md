@@ -1,3 +1,7 @@
+# 0.0.5
+
+* Renamed argument.
+
 # 0.0.4
 
 * Fixed `traverse` type.
