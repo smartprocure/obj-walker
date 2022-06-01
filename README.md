@@ -119,10 +119,10 @@ walk(obj, { traverse }).forEach(({ val }) => {
 ## mapLeaves
 
 ```typescript
-mapLeaves(obj: object, mapFn: Mapper, options?: Options) => object
+mapLeaves(obj: object, mapper: Mapper, options?: Options) => object
 ```
 
-where `mapFn` receives:
+where `mapper` receives:
 
 ```typescript
 export interface Node {
@@ -178,7 +178,7 @@ return a key/value pair like so `[key, val]`, otherwise the key will
 not be written to the return object/array.
 
 ```typescript
-mapKV(obj: object, mapFn: MapperKV, options?: Options) => object
+mapKV(obj: object, mapper: MapperKV, options?: Options) => object
 
 type MapperKV = (node: Node) => [string | undefined, any] | undefined
 ```
@@ -225,7 +225,7 @@ produces:
 Similar to `mapLeaves`, but receives all nodes, not just the leaves.
 
 ```typescript
-map(obj: object, mapFn: Mapper, options?: Options) => object
+map(obj: object, mapper: Mapper, options?: Options) => object
 ```
 
 Notice the custom `traverse` fn. This determines how

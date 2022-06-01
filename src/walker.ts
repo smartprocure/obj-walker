@@ -62,7 +62,7 @@ export const walk = (obj: object, options: Options = {}) => {
  * preorder (default) or postorder manner. Exclude nodes by returning
  * undefined.
  */
-export const map = (obj: object, mapFn: Mapper, options?: Options) => {
+export const map = (obj: object, mapper: Mapper, options?: Options) => {
   if (!isObjectOrArray(obj)) {
     return obj
   }
@@ -70,7 +70,7 @@ export const map = (obj: object, mapFn: Mapper, options?: Options) => {
   // console.dir(nodes, {depth: 10})
   const result = _.isPlainObject(obj) ? {} : []
   for (const node of nodes) {
-    const newVal = mapFn(node)
+    const newVal = mapper(node)
     if (newVal !== undefined) {
       set(result, node.path, newVal)
     }
@@ -83,14 +83,14 @@ export const map = (obj: object, mapFn: Mapper, options?: Options) => {
  * a preorder (default) or postorder manner. Exclude nodes by returning
  * undefined.
  */
-export const mapKV = (obj: object, mapFn: MapperKV, options?: Options) => {
+export const mapKV = (obj: object, mapper: MapperKV, options?: Options) => {
   if (!isObjectOrArray(obj)) {
     return obj
   }
   const nodes = walk(obj, options)
   const result = _.isPlainObject(obj) ? {} : []
   for (const node of nodes) {
-    const newKV = mapFn(node)
+    const newKV = mapper(node)
     if (newKV !== undefined) {
       const path = node.path
       const [key, val] = newKV
@@ -111,5 +111,5 @@ export const mapKV = (obj: object, mapFn: MapperKV, options?: Options) => {
  * Map over the leaves of an object with a fn. Exclude nodes by returning
  * undefined.
  */
-export const mapLeaves = (obj: object, mapFn: Mapper, options?: Options) =>
-  map(obj, mapFn, { ...options, leavesOnly: true })
+export const mapLeaves = (obj: object, mapper: Mapper, options?: Options) =>
+  map(obj, mapper, { ...options, leavesOnly: true })

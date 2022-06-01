@@ -51,7 +51,7 @@ const deref = (obj) => {
 
 const obj = { a: { c: 1, d: 2 }, b: { e: 3, f: 4 } }
 
-const map = (obj, mapFn, options) => {
+const map = (obj, mapper, options) => {
   const mapper = (...args) => {
     const node = objectIterator(...args)
 
