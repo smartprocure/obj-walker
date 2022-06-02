@@ -19,7 +19,7 @@ describe('walker', () => {
     }
     const walkFn = (node: Node) => {
       const { key, val, parents } = node
-      const parent = parents?.[0]
+      const parent = parents[0]
       if (Array.isArray(val) && key) {
         parent[key] = _.compact(val)
       }
