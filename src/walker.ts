@@ -18,6 +18,9 @@ const getRoot = (obj: object, jsonCompat = false): Node => {
 
 const defTraverse = (x: any) => isObjectOrArray(x) && !_.isEmpty(x) && x
 
+/**
+ *
+ */
 export const walker = (obj: object, walkFn: WalkFn, options: Options = {}) => {
   const { postOrder, jsonCompat, traverse = defTraverse } = options
   // A leaf is a node that can't be traversed
@@ -55,7 +58,8 @@ export const walker = (obj: object, walkFn: WalkFn, options: Options = {}) => {
 
 /**
  * Map over an object modifying values with a fn depth-first in a
- * preorder manner. Exclude nodes by returning undefined.
+ * preorder manner. Exclude nodes by returning undefined. Undefined
+ * array values will not be excluded.
  */
 export const map = (obj: object, mapper: Mapper, options: MapOptions = {}) => {
   if (!isObjectOrArray(obj)) {
@@ -115,7 +119,7 @@ export const walk = (obj: object, options: Options = {}) => {
 
 /**
  * Map over the leaves of an object with a fn. Exclude nodes by returning
- * undefined.
+ * undefined. Undefined array values will not be excluded.
  */
 export const mapLeaves = (obj: object, mapper: Mapper, options?: Options) => {
   if (!isObjectOrArray(obj)) {
