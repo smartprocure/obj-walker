@@ -5,6 +5,13 @@ import { WalkFn, Mapper, MapOptions, Options, Node } from './types'
 export const isObjectOrArray = _.overSome([_.isPlainObject, _.isArray])
 const defTraverse = (x: any) => isObjectOrArray(x) && !_.isEmpty(x) && x
 
+const getRoot = (obj: object, jsonCompat = false): Node => {
+  const rootCommon = { path: [], isLeaf: false, isRoot: true }
+  return jsonCompat
+    ? { key: '', val: obj, parents: [{ '': obj }], ...rootCommon }
+    : { key: undefined, val: obj, parents: [], ...rootCommon }
+}
+
 export const walker = (obj: object, walkFn: WalkFn, options: Options = {}) => {
   const { postOrder, jsonCompat, traverse = defTraverse } = options
   // A leaf is a node that can't be traversed
@@ -36,11 +43,7 @@ export const walker = (obj: object, walkFn: WalkFn, options: Options = {}) => {
     }
   }
 
-  const rootCommon = { path: [], isLeaf: false, isRoot: true }
-  const root = jsonCompat
-    ? { key: '', val: obj, parents: [{ '': obj }], ...rootCommon }
-    : { key: undefined, val: obj, parents: [], ...rootCommon }
-
+  const root = getRoot(obj, jsonCompat)
   _walk(root)
 }
 
@@ -82,11 +85,7 @@ export const map = (obj: object, mapper: Mapper, options: MapOptions = {}) => {
     }
   }
 
-  const rootCommon = { path: [], isLeaf: false, isRoot: true }
-  const root = jsonCompat
-    ? { key: '', val: obj, parents: [{ '': obj }], ...rootCommon }
-    : { key: undefined, val: obj, parents: [], ...rootCommon }
-
+  const root = getRoot(obj, jsonCompat)
   _walk(root)
 
   return result
