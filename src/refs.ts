@@ -1,12 +1,11 @@
 import { decycle, retrocycle } from 'json-decycle'
-import { map } from './walker'
+import _ from 'lodash/fp'
+import { walk, map } from './walker'
 import { Node, RefOptions } from './types'
 
 export const addRefs = (obj: object, options?: RefOptions) => {
   const fn = decycle()
-  const mapper = ({ key, val, parents, isLeaf }: Node) => {
-    // Ignore nested leaves
-    if (isLeaf && parents.length > 2) return
+  const mapper = ({ key, val, parents }: Node) => {
     return fn.call(parents[0], key ?? '', val)
   }
   return map(obj, mapper, { ...options, jsonCompat: true })
@@ -14,11 +13,11 @@ export const addRefs = (obj: object, options?: RefOptions) => {
 
 export const deref = (obj: object, options?: RefOptions) => {
   const fn = retrocycle()
-  const mapper = ({ key, val, parents }: Node) =>
-    fn.call(parents[0], key ?? '', val)
-  return map(obj, mapper, {
-    ...options,
-    postOrder: true,
-    jsonCompat: true,
-  })
+  const clonedObj = _.cloneDeep(obj)
+  walk(clonedObj, { ...options, postOrder: true, jsonCompat: true }).forEach(
+    ({ parents, key, val }) => {
+      fn.call(parents[0], key ?? '', val)
+    }
+  )
+  return clonedObj
 }

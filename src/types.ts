@@ -6,6 +6,7 @@ export interface Options {
 }
 
 export type RefOptions = Pick<Options, 'traverse'>
+export type MapOptions = Pick<Options, 'jsonCompat' | 'traverse'>
 
 export interface Node {
   key: string | undefined
@@ -19,4 +20,3 @@ export interface Node {
 
 export type WalkFn = (node: Node) => void
 export type Mapper = (node: Node) => any
-export type MapperKV = (node: Node) => [string | undefined, any] | undefined

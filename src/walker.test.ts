@@ -1,9 +1,9 @@
 import _ from 'lodash/fp'
 import { describe, expect, test } from '@jest/globals'
-import { walker, walk, map, mapKV, mapLeaves } from './walker'
+import { walker, walk, map, mapLeaves } from './walker'
 import { Node } from './types'
 
-describe('walkMut', () => {
+describe('walker', () => {
   test('remove empty elements from an array (nested)', () => {
     const obj = {
       a: {
@@ -561,86 +561,19 @@ describe('map', () => {
       },
       d: {
         e: 'Bob',
-        f: [10, null, 30, undefined, 40],
+        f: [10, null, 30, [31, undefined, 32], 40],
       },
-      g: [25, ''],
-      h: 'Frank',
+      g: [25, '', { h: [null, 26, 27] }],
+      i: 'Frank',
     }
-    const result = map(
-      obj,
-      ({ val }) => (Array.isArray(val) ? _.compact(val) : val),
-      { traverse: (x: any) => _.isPlainObject(x) && x }
+    const result = map(obj, ({ val }) =>
+      Array.isArray(val) ? _.compact(val) : val
     )
     expect(result).toEqual({
       a: { b: 23, c: 24 },
-      d: { e: 'Bob', f: [10, 30, 40] },
-      g: [25],
-      h: 'Frank',
-    })
-  })
-  test('map over leaves (post order)', () => {
-    const obj = {
-      a: {
-        b: 23,
-        c: 24,
-      },
-      d: {
-        e: 'Bob',
-        f: [10, 20, 30],
-      },
-    }
-    const result = map(
-      obj,
-      ({ isLeaf, val }) => {
-        // Only deal with leaves
-        if (!isLeaf) {
-          return
-        }
-        if (typeof val === 'number') {
-          return val + 1
-        }
-        // Prune Bob node
-        if (val === 'Bob') {
-          return
-        }
-        return val
-      },
-      { postOrder: true }
-    )
-    expect(result).toEqual({ a: { b: 24, c: 25 }, d: { f: [11, 21, 31] } })
-  })
-})
-
-describe('mapKV', () => {
-  test('should modify keys and values', () => {
-    const obj = {
-      bob: {
-        age: 17,
-        scores: [95, 96, 83],
-      },
-      joe: {
-        age: 16,
-        scores: [87, 82, 77],
-      },
-      frank: {
-        age: 16,
-        scores: [78, 85, 89],
-      },
-    }
-    const result = mapKV(
-      obj,
-      ({ key, val }) => {
-        if (key === 'age') {
-          return ['currentAge', val + 1]
-        }
-        return [key, val]
-      },
-      { traverse: (x: any) => _.isPlainObject(x) && x }
-    )
-    expect(result).toEqual({
-      bob: { currentAge: 18, scores: [95, 96, 83] },
-      joe: { currentAge: 17, scores: [87, 82, 77] },
-      frank: { currentAge: 17, scores: [78, 85, 89] },
+      d: { e: 'Bob', f: [10, 30, [31, 32], 40] },
+      g: [25, { h: [26, 27] }],
+      i: 'Frank',
     })
   })
 })
