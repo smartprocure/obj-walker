@@ -1,3 +1,7 @@
+# 0.0.6
+
+* Generic `walker` fn.
+
 # 0.0.5
 
 * Renamed argument.

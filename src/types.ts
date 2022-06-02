@@ -17,5 +17,6 @@ export interface Node {
   isRoot: boolean
 }
 
+export type WalkFn = (node: Node) => void
 export type Mapper = (node: Node) => any
 export type MapperKV = (node: Node) => [string | undefined, any] | undefined

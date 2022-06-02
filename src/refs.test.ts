@@ -2,7 +2,7 @@ import { describe, expect, test } from '@jest/globals'
 import { addRefs, deref } from './refs'
 
 describe('addRefs', () => {
-  test('adds refs', () => {
+  test.only('adds refs', () => {
     const apiOutput = {
       1: 'foo',
       2: 'bar',

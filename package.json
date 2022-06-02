@@ -1,6 +1,6 @@
 {
   "name": "obj-walker",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Map over an object preorder or postorder",
   "author": "David Sargeant",
   "repository": "git://github.com/dubiousdavid/obj-walker.git",

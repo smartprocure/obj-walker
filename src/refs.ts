@@ -6,7 +6,7 @@ export const addRefs = (obj: object, options?: RefOptions) => {
   const fn = decycle()
   const mapper = ({ key, val, parents, isLeaf }: Node) => {
     // Ignore nested leaves
-    if (isLeaf && parents.length > 1) return
+    if (isLeaf && parents.length > 2) return
     return fn.call(parents[0], key ?? '', val)
   }
   return map(obj, mapper, { ...options, jsonCompat: true })

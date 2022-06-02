@@ -1,23 +1,23 @@
 import { set, unset } from 'lodash'
 import _ from 'lodash/fp'
-import { Mapper, MapperKV, Options, Node } from './types'
+import { WalkFn, Mapper, MapperKV, Options, Node } from './types'
 
 export const isObjectOrArray = _.overSome([_.isPlainObject, _.isArray])
 const defTraverse = (x: any) => isObjectOrArray(x) && !_.isEmpty(x) && x
 
-/**
- * Walk an object depth-first in a preorder (default) or
- * postorder manner. Returns an array of nodes.
- */
-export const walk = (obj: object, options: Options = {}) => {
+export const walker = (obj: object, walkFn: WalkFn, options: Options = {}) => {
   const { postOrder, jsonCompat, traverse = defTraverse } = options
   // A leaf is a node that can't be traversed
   const isLeaf = _.negate(traverse)
   // Recursively walk object
-  const _walk = (obj: object, parents: any[], path: string[]) => {
-    const nodes: Node[] = []
-    for (const [key, val] of Object.entries(obj)) {
-      const nodeParents = [obj, ...parents]
+  const _walk = (node: Node): void => {
+    if (!postOrder) {
+      walkFn(node)
+    }
+    const { val: tree, parents, path } = node
+    const next = traverse(tree) || []
+    for (const [key, val] of Object.entries(next)) {
+      const nodeParents = [tree, ...parents]
       const nodePath = [...path, key]
       const node = {
         key,
@@ -27,33 +27,35 @@ export const walk = (obj: object, options: Options = {}) => {
         isLeaf: isLeaf(val),
         isRoot: false,
       }
-      const next = traverse(val)
-      const childNodes = next ? _walk(next, nodeParents, nodePath) : []
-      nodes.push(
-        // Add child nodes before node for post order
-        ...(postOrder ? childNodes : []),
-        node,
-        // Add child nodes after node for pre order
-        ...(!postOrder ? childNodes : [])
-      )
+      _walk(node)
     }
-    return nodes
+    if (postOrder) {
+      walkFn(node)
+    }
   }
 
-  const nodes = _walk(traverse(obj), [], [])
-  // Filter the leaves
-  if (options.leavesOnly) {
-    return _.filter('isLeaf', nodes)
-  }
-
-  // Add root node
   const rootCommon = { path: [], isLeaf: false, isRoot: true }
   const root = jsonCompat
     ? { key: '', val: obj, parents: [{ '': obj }], ...rootCommon }
     : { key: undefined, val: obj, parents: [], ...rootCommon }
-  if (postOrder) nodes.push(root)
-  else nodes.unshift(root)
 
+  _walk(root)
+}
+
+/**
+ * Walk an object depth-first in a preorder (default) or
+ * postorder manner. Returns an array of nodes.
+ */
+export const walk = (obj: object, options: Options = {}) => {
+  const nodes: Node[] = []
+  const walkFn = (node: Node) => {
+    nodes.push(node)
+  }
+  walker(obj, walkFn, options)
+  // Filter the leaves
+  if (options.leavesOnly) {
+    return _.filter('isLeaf', nodes)
+  }
   return nodes
 }
 
@@ -67,7 +69,7 @@ export const map = (obj: object, mapper: Mapper, options?: Options) => {
     return obj
   }
   const nodes = walk(obj, options)
-  // console.dir(nodes, {depth: 10})
+  // console.dir(nodes, { depth: 10 })
   const result = _.isPlainObject(obj) ? {} : []
   for (const node of nodes) {
     const newVal = mapper(node)
