@@ -11,6 +11,7 @@ export const walker = (obj: object, walkFn: WalkFn, options: Options = {}) => {
   const isLeaf = _.negate(traverse)
   // Recursively walk object
   const _walk = (node: Node): void => {
+    // Preorder
     if (!postOrder) {
       walkFn(node)
     }
@@ -29,6 +30,7 @@ export const walker = (obj: object, walkFn: WalkFn, options: Options = {}) => {
       }
       _walk(node)
     }
+    // Postorder
     if (postOrder) {
       walkFn(node)
     }
