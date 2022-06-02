@@ -47,6 +47,11 @@ export const walker = (obj: object, walkFn: WalkFn, options: Options = {}) => {
   _walk(root)
 }
 
+const parentIsArray = (node: Node) => {
+  const parent = node.parents?.[0]
+  return Array.isArray(parent)
+}
+
 /**
  * Map over an object modifying values with a fn depth-first in a
  * preorder manner. Exclude nodes by returning undefined.
@@ -62,9 +67,8 @@ export const map = (obj: object, mapper: Mapper, options: MapOptions = {}) => {
   // Recursively walk object
   const _walk = (node: Node): void => {
     let newVal = mapper(node)
-    const parent = node.parents?.[0]
     // Set value to null for arrays rather than skipping
-    if (newVal === undefined && Array.isArray(parent)) {
+    if (newVal === undefined && parentIsArray(node)) {
       newVal = null
     }
     // Exclude node
@@ -123,10 +127,9 @@ export const mapLeaves = (obj: object, mapper: Mapper, options?: Options) => {
   const nodes = walk(obj, { ...options, leavesOnly: true })
   const result = _.isPlainObject(obj) ? {} : []
   for (const node of nodes) {
-    const parent = node.parents?.[0]
     let newVal = mapper(node)
     // Set value to null for arrays rather than skipping
-    if (newVal === undefined && Array.isArray(parent)) {
+    if (newVal === undefined && parentIsArray(node)) {
       newVal = null
     }
     if (newVal !== undefined) {
