@@ -61,8 +61,12 @@ export const map = (obj: object, mapper: Mapper, options: MapOptions = {}) => {
   const isLeaf = _.negate(traverse)
   // Recursively walk object
   const _walk = (node: Node): void => {
-    // Preorder
-    const newVal = mapper(node)
+    let newVal = mapper(node)
+    const parent = node.parents?.[0]
+    // Set value to null for arrays rather than skipping
+    if (newVal === undefined && Array.isArray(parent)) {
+      newVal = null
+    }
     // Exclude node
     if (newVal === undefined) {
       return
@@ -119,7 +123,12 @@ export const mapLeaves = (obj: object, mapper: Mapper, options?: Options) => {
   const nodes = walk(obj, { ...options, leavesOnly: true })
   const result = _.isPlainObject(obj) ? {} : []
   for (const node of nodes) {
-    const newVal = mapper(node)
+    const parent = node.parents?.[0]
+    let newVal = mapper(node)
+    // Set value to null for arrays rather than skipping
+    if (newVal === undefined && Array.isArray(parent)) {
+      newVal = null
+    }
     if (newVal !== undefined) {
       set(result, node.path, newVal)
     }
