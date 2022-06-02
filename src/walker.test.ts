@@ -1,6 +1,7 @@
 import _ from 'lodash/fp'
 import { describe, expect, test } from '@jest/globals'
 import { walker, walk, map, mapKV, mapLeaves } from './walker'
+import { Node } from './types'
 
 describe('walkMut', () => {
   test('remove empty elements from an array (nested)', () => {
@@ -16,17 +17,14 @@ describe('walkMut', () => {
       g: [25, '', { h: [null, 26, 27] }],
       i: 'Frank',
     }
-    walker(
-      obj,
-      (node) => {
-        const { key, val, parents } = node
-        const parent = parents?.[0]
-        if (Array.isArray(val) && key) {
-          parent[key] = _.compact(val)
-        }
-      },
-      { postOrder: true }
-    )
+    const walkFn = (node: Node) => {
+      const { key, val, parents } = node
+      const parent = parents?.[0]
+      if (Array.isArray(val) && key) {
+        parent[key] = _.compact(val)
+      }
+    }
+    walker(obj, walkFn, { postOrder: true })
     expect(obj).toEqual({
       a: { b: 23, c: 24 },
       d: { e: 'Bob', f: [10, 30, [31, 32], 40] },

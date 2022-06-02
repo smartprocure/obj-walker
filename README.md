@@ -13,6 +13,49 @@ an object in the same way `JSON.stringify` and `JSON.parse` do. Namely,
 preorder and postorder. To mimic that behavior entirely set the `jsonCompat`
 option to `true`.
 
+## walker
+
+```typescript
+walker(obj: object, walkFn: WalkFn, options: Options = {}) => void
+```
+
+Generic walking fn that traverse an object in preorder (default) or postorder,
+calling `walkFn` for each node.
+
+```typescript
+const obj = {
+  a: {
+    b: 23,
+    c: 24,
+  },
+  d: {
+    e: 'Bob',
+    f: [10, null, 30, [31, undefined, 32], 40],
+  },
+  g: [25, '', { h: [null, 26, 27] }],
+  i: 'Frank',
+}
+const walkFn = (node: Node) => {
+  const { key, val, parents } = node
+  const parent = parents?.[0]
+  if (Array.isArray(val) && key) {
+    parent[key] = _.compact(val)
+  }
+}
+walker(obj, walkFn, { postOrder: true })
+```
+
+Mutates `obj` producing:
+
+```typescript
+{
+  a: { b: 23, c: 24 },
+  d: { e: 'Bob', f: [10, 30, [31, 32], 40] },
+  g: [25, { h: [26, 27] }],
+  i: 'Frank',
+}
+```
+
 ## walk
 
 ```typescript
