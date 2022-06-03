@@ -13,60 +13,33 @@ an object in the same way `JSON.stringify` and `JSON.parse` do. Namely,
 preorder and postorder. To mimic that behavior entirely set the `jsonCompat`
 option to `true`.
 
+Custom traversal functions are supported. This allows you to walk tree-like
+structures, such as JSON schema, in a more efficient and logical way. `map`
+does not work particularly well for this use case since the path to set values
+may be incompleted. Prefer `walkie` in these scenarios instead.
+
 ## walker
 
 ```typescript
-walker(obj: object, walkFn: WalkFn, options: Options = {}) => void
+walker(obj: object, walkFn: WalkFn, options: WOptions = {}) => void
 ```
 
 Generic walking fn that traverse an object in preorder (default) or postorder,
-calling `walkFn` for each node.
+calling `walkFn` for each node. Can be used directly, but probably shouldn't.
 
 ```typescript
-const obj = {
-  a: {
-    b: 23,
-    c: 24,
-  },
-  d: {
-    e: 'Bob',
-    f: [10, null, 30, [31, undefined, 32], 40],
-  },
-  g: [25, '', { h: [null, 26, 27] }],
-  i: 'Frank',
-}
-const walkFn = (node: Node) => {
-  const { key, val, parents } = node
-  const parent = parents?.[0]
-  if (Array.isArray(val) && key) {
-    parent[key] = _.compact(val)
-  }
-}
-walker(obj, walkFn, { postOrder: true })
-```
-
-Mutates `obj` producing:
-
-```typescript
-{
-  a: { b: 23, c: 24 },
-  d: { e: 'Bob', f: [10, 30, [31, 32], 40] },
-  g: [25, { h: [26, 27] }],
-  i: 'Frank',
+export interface Node {
+  key: string | undefined
+  val: any
+  parents: any[]
+  path: string[]
+  isLeaf: boolean
+  isRoot: boolean
 }
 ```
 
-## walk
-
 ```typescript
-walk(obj: object, options: Options = {}) => Node[]
-```
-
-Walk an object. Returns an array of all nodes in the object in either
-preorder or postorder.
-
-```typescript
-import { walk } from 'obj-walker'
+import { walker } from 'obj-walker'
 
 const obj = {
   a: {
@@ -78,10 +51,17 @@ const obj = {
     f: [10, 20, 30],
   },
 }
-walk(obj)
+
+const nodes: Node[] = []
+const walkFn = (node: Node) => {
+  nodes.push(node)
+}
+walker(obj, walkFn, options)
+nodes
 ```
 
-produces:
+Returns an array of nodes. Note this is how `walk` works, so prefer
+that fn.
 
 ```typescript
 [
@@ -114,13 +94,80 @@ produces:
   },
   ...
 ]
+
 ```
 
-One of the more interesting uses of `walk` is mutating an object. For example,
-below I want to walk a MongoDB JSON schema and set additionalProperties to `true`
-wherever it exists. I traverse this tree using a custom `traverse` fn.
+## walk
 
 ```typescript
+walk(obj: object, options: Options = {}) => Node[]
+```
+
+Walk an object. Returns an array of all nodes in the object in either
+preorder or postorder.
+
+```typescript
+interface Options {
+  postOrder?: boolean
+  leavesOnly?: boolean
+  jsonCompat?: boolean
+  traverse?(x: any): any
+}
+```
+
+```typescript
+import { walk } from 'obj-walker'
+
+const obj = {
+  a: {
+    b: 23,
+    c: 24,
+  },
+  d: {
+    e: 'Bob',
+    f: [10, 20, 30],
+  },
+}
+walk(obj).map((x) => x.path)
+```
+
+Produces:
+
+```typescript
+[
+  [],
+  ['a'],
+  ['a', 'b'],
+  ['a', 'c'],
+  ['d'],
+  ['d', 'e'],
+  ['d', 'f'],
+  ['d', 'f', '0'],
+  ['d', 'f', '1'],
+  ['d', 'f', '2'],
+]
+```
+
+## walkie
+
+```typescript
+walkie(obj: object, walkFn: WalkFn, options: Options = {}) => object
+```
+
+Walk-each ~ walkie
+
+Walk over an object calling `walkFn` for each node. The original
+object is deep-cloned making it possible to simply mutate each
+node as needed in order to transform the object. The cloned object
+is returned.
+
+Below I want to walk a MongoDB JSON schema and set `additionalProperties` to `true`
+wherever it exists. I traverse this tree using a custom `traverse` fn.
+The original object is not modified.
+
+```typescript
+import { walkie } from 'obj-walker'
+
 const obj = {
   bsonType: 'object',
   additionalProperties: false,
@@ -151,12 +198,88 @@ const obj = {
 }
 
 const traverse = (x: any) => x.properties || (x.items && { items: x.items })
-
-walk(obj, { traverse }).forEach(({ val }) => {
+const walkFn = ({ val }: Node) => {
   if (val.hasOwnProperty('additionalProperties')) {
     val.additionalProperties = true
   }
-})
+}
+walkie(obj, walkFn, { traverse })
+```
+
+Produces:
+
+```typescript
+{
+  bsonType: 'object',
+  additionalProperties: true,
+  required: ['name'],
+  properties: {
+    _id: { bsonType: 'objectId' },
+    name: { bsonType: 'string' },
+    addresses: {
+      bsonType: 'array',
+      items: {
+        bsonType: 'object',
+        additionalProperties: true,
+        properties: {
+          address: {
+            bsonType: 'object',
+            additionalProperties: true,
+            properties: {
+              zip: { bsonType: 'string' },
+              country: { bsonType: 'string' },
+            },
+          },
+        },
+      },
+    },
+  },
+}
+```
+
+## map
+
+Map over an object modifying values with a fn depth-first in a
+preorder manner. Exclude nodes by returning undefined. Undefined
+array values will not be excluded. The output of the mapper fn
+will be traversed if possible.
+
+```typescript
+map(obj: object, mapper: Mapper, options: MapOptions = {}) => object
+```
+
+Notice the custom `traverse` fn. This determines how
+to traverse into an object or array. By default, we only
+traverse into plain objects and arrays and iterate over there
+key/value pairs.
+
+```typescript
+import { map } from 'obj-walker'
+
+const obj = {
+  a: {
+    b: 23,
+    c: 24,
+  },
+  d: {
+    e: 'Bob',
+    f: [10, null, 30, [31, undefined, 32], 40],
+  },
+  g: [25, '', { h: [null, 26, 27] }],
+  i: 'Frank',
+}
+map(obj, ({ val }) => (Array.isArray(val) ? _.compact(val) : val))
+```
+
+Produces:
+
+```typescript
+{
+  a: { b: 23, c: 24 },
+  d: { e: 'Bob', f: [10, 30, [31, 32], 40] },
+  g: [25, { h: [26, 27] }],
+  i: 'Frank',
+}
 ```
 
 ## mapLeaves
@@ -165,29 +288,14 @@ walk(obj, { traverse }).forEach(({ val }) => {
 mapLeaves(obj: object, mapper: Mapper, options?: Options) => object
 ```
 
-where `mapper` receives:
+Map over the leaves of an object, where a leaf is defined as a value
+that is not traversable according to either the default `traverse` fn
+which traverses plain objects and arrays, or your custom `traverse` fn.
 
-```typescript
-export interface Node {
-  key: string | undefined
-  val: any
-  parents: any[]
-  path: string[]
-  isLeaf: boolean
-  isRoot: boolean
-}
-```
+Exclude nodes by returning undefined. Undefined array values will not
+be excluded.
 
-and `options` can be:
-
-```typescript
-export interface Options {
-  postOrder?: boolean
-  leavesOnly?: boolean
-  jsonCompat?: boolean
-  traverse?(x: any): any
-}
-```
+`mapper` is passed a `Node` object.
 
 ```typescript
 import { mapLeaves } from 'obj-walker'
@@ -214,109 +322,14 @@ Produces:
 }
 ```
 
-## mapKV
-
-Map over an object, potentially changing keys and values. You must
-return a key/value pair like so `[key, val]`, otherwise the key will
-not be written to the return object/array.
-
-```typescript
-mapKV(obj: object, mapper: MapperKV, options?: Options) => object
-
-type MapperKV = (node: Node) => [string | undefined, any] | undefined
-```
-
-```typescript
-const obj = {
-  bob: {
-    age: 17,
-    scores: [95, 96, 83],
-  },
-  joe: {
-    age: 16,
-    scores: [87, 82, 77],
-  },
-  frank: {
-    age: 16,
-    scores: [78, 85, 89],
-  },
-}
-mapKV(
-  obj,
-  ({ key, val }) => {
-    if (key === 'age') {
-      return ['currentAge', val + 1]
-    }
-    return [key, val]
-  },
-  { traverse: (x: any) => _.isPlainObject(x) && x }
-)
-```
-
-produces:
-
-```typescript
-{
-  bob: { currentAge: 18, scores: [95, 96, 83] },
-  joe: { currentAge: 17, scores: [87, 82, 77] },
-  frank: { currentAge: 17, scores: [78, 85, 89] },
-}
-```
-
-## map
-
-Similar to `mapLeaves`, but receives all nodes, not just the leaves.
-
-```typescript
-map(obj: object, mapper: Mapper, options?: Options) => object
-```
-
-Notice the custom `traverse` fn. This determines how
-to traverse into an object or array. By default, we only
-traverse into plain objects and arrays and iterate over there
-key/value pairs.
-
-```typescript
-import { map } from 'obj-walker'
-
-const obj = {
-  a: {
-    b: 23,
-    c: 24,
-  },
-  d: {
-    e: 'Bob',
-    f: [10, null, 30, undefined, 40],
-  },
-  g: [25, ''],
-}
-map(
-  obj,
-  ({ val }) => {
-    if (Array.isArray(val)) {
-      return _.compact(val)
-    }
-    return val
-  },
-  { traverse: (x: any) => _.isPlainObject(x) && x }
-)
-```
-
-produces:
-
-```typescript
-{
-  a: { b: 23, c: 24 },
-  d: { e: 'Bob', f: [10, 30, 40] },
-  g: [25],
-}
-```
-
 ## addRefs
 
 ```typescript
 addRefs(obj: object, options?: RefOptions): object
 ```
+
+Replace duplicate objects refs with pointers to the first
+object seen.
 
 ```typescript
 import { addRefs } from 'obj-walker'
@@ -349,7 +362,7 @@ const obj = {
 addRefs(obj)
 ```
 
-produces:
+Produces:
 
 ```typescript
 {
@@ -371,6 +384,8 @@ produces:
 deref(obj: object, options?: RefOptions): object
 ```
 
+Rehydrate objects by replacing refs with actual objects.
+
 ```typescript
 import { deref } from 'obj-walker'
 
@@ -388,7 +403,7 @@ const obj = {
 deref(obj)
 ```
 
-produces:
+Produces:
 
 ```typescript
 {

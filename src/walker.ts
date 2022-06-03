@@ -1,6 +1,6 @@
 import { set } from 'lodash'
 import _ from 'lodash/fp'
-import { WalkFn, Mapper, MapOptions, Options, Node } from './types'
+import { WalkFn, Mapper, MapOptions, Options, Node, WOptions } from './types'
 
 export const isObjectOrArray = _.overSome([_.isPlainObject, _.isArray])
 
@@ -19,9 +19,11 @@ const getRoot = (obj: object, jsonCompat = false): Node => {
 const defTraverse = (x: any) => isObjectOrArray(x) && !_.isEmpty(x) && x
 
 /**
- *
+ * Walk an object depth-first in a preorder (default) or postorder manner.
+ * Call walkFn for each node visited. Supports traversing the object in
+ * arbitrary ways by passing a traverse fn in options.
  */
-export const walker = (obj: object, walkFn: WalkFn, options: Options = {}) => {
+export const walker = (obj: object, walkFn: WalkFn, options: WOptions = {}) => {
   const { postOrder, jsonCompat, traverse = defTraverse } = options
   // A leaf is a node that can't be traversed
   const isLeaf = _.negate(traverse)
@@ -59,7 +61,8 @@ export const walker = (obj: object, walkFn: WalkFn, options: Options = {}) => {
 /**
  * Map over an object modifying values with a fn depth-first in a
  * preorder manner. Exclude nodes by returning undefined. Undefined
- * array values will not be excluded.
+ * array values will not be excluded. The output of the mapper fn
+ * will be traversed if possible.
  */
 export const map = (obj: object, mapper: Mapper, options: MapOptions = {}) => {
   if (!isObjectOrArray(obj)) {
@@ -115,6 +118,20 @@ export const walk = (obj: object, options: Options = {}) => {
     return _.filter('isLeaf', nodes)
   }
   return nodes
+}
+
+/**
+ * Walk-each ~ walkie
+ *
+ * Walk over an object calling walkFn for each node. The original
+ * object is deep-cloned making it possible to simply mutate each
+ * node as needed in order to transform the object. The cloned object
+ * is returned.
+ */
+export const walkie = (obj: object, walkFn: WalkFn, options: Options = {}) => {
+  const clonedObj = _.cloneDeep(obj)
+  walk(clonedObj, options).forEach(walkFn)
+  return clonedObj
 }
 
 /**

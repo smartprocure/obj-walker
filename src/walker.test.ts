@@ -1,6 +1,6 @@
 import _ from 'lodash/fp'
 import { describe, expect, test } from '@jest/globals'
-import { walker, walk, map, mapLeaves } from './walker'
+import { walker, walk, walkie, map, mapLeaves } from './walker'
 import { Node } from './types'
 
 describe('walker', () => {
@@ -262,8 +262,7 @@ describe('walk', () => {
       },
     }
     const traverse = (x: any) => x.properties || (x.items && { items: x.items })
-    const nodes = walk(obj, { traverse })
-    const kvs = nodes.map(_.pick(['key', 'val']))
+    const kvs = walk(obj, { traverse }).map(_.pick(['key', 'val']))
     expect(kvs).toEqual([
       {
         key: undefined,
@@ -439,71 +438,6 @@ describe('walk', () => {
     ])
   })
 
-  test('mutate a tree after walking', () => {
-    const obj = {
-      bsonType: 'object',
-      additionalProperties: false,
-      required: ['name'],
-      properties: {
-        _id: {
-          bsonType: 'objectId',
-        },
-        name: { bsonType: 'string' },
-        addresses: {
-          bsonType: 'array',
-          items: {
-            bsonType: 'object',
-            additionalProperties: false,
-            properties: {
-              address: {
-                bsonType: 'object',
-                additionalProperties: false,
-                properties: {
-                  zip: { bsonType: 'string' },
-                  country: { bsonType: 'string' },
-                },
-              },
-            },
-          },
-        },
-      },
-    }
-
-    const traverse = (x: any) => x.properties || (x.items && { items: x.items })
-
-    walk(obj, { traverse }).forEach(({ val }) => {
-      if (val.hasOwnProperty('additionalProperties')) {
-        val.additionalProperties = true
-      }
-    })
-    expect(obj).toEqual({
-      bsonType: 'object',
-      additionalProperties: true,
-      required: ['name'],
-      properties: {
-        _id: { bsonType: 'objectId' },
-        name: { bsonType: 'string' },
-        addresses: {
-          bsonType: 'array',
-          items: {
-            bsonType: 'object',
-            additionalProperties: true,
-            properties: {
-              address: {
-                bsonType: 'object',
-                additionalProperties: true,
-                properties: {
-                  zip: { bsonType: 'string' },
-                  country: { bsonType: 'string' },
-                },
-              },
-            },
-          },
-        },
-      },
-    })
-  })
-
   test('reduce a tree', () => {
     const obj = {
       joe: {
@@ -549,6 +483,76 @@ describe('walk', () => {
     )(nodes)
 
     expect(avg).toBe(88)
+  })
+})
+
+describe('walkie', () => {
+  test('mutate a tree', () => {
+    const obj = {
+      bsonType: 'object',
+      additionalProperties: false,
+      required: ['name'],
+      properties: {
+        _id: {
+          bsonType: 'objectId',
+        },
+        name: { bsonType: 'string' },
+        addresses: {
+          bsonType: 'array',
+          items: {
+            bsonType: 'object',
+            additionalProperties: false,
+            properties: {
+              address: {
+                bsonType: 'object',
+                additionalProperties: false,
+                properties: {
+                  zip: { bsonType: 'string' },
+                  country: { bsonType: 'string' },
+                },
+              },
+            },
+          },
+        },
+      },
+    }
+
+    const traverse = (x: any) => x.properties || (x.items && { items: x.items })
+    const walkFn = ({ val }: Node) => {
+      if (val.hasOwnProperty('additionalProperties')) {
+        val.additionalProperties = true
+      }
+    }
+    const newObj = walkie(obj, walkFn, { traverse })
+    // Original object wasn't modified
+    expect(obj).toEqual(obj)
+    // additionalProperties set to true recursively
+    expect(newObj).toEqual({
+      bsonType: 'object',
+      additionalProperties: true,
+      required: ['name'],
+      properties: {
+        _id: { bsonType: 'objectId' },
+        name: { bsonType: 'string' },
+        addresses: {
+          bsonType: 'array',
+          items: {
+            bsonType: 'object',
+            additionalProperties: true,
+            properties: {
+              address: {
+                bsonType: 'object',
+                additionalProperties: true,
+                properties: {
+                  zip: { bsonType: 'string' },
+                  country: { bsonType: 'string' },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
   })
 })
 

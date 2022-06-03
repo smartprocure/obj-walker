@@ -1,10 +1,10 @@
 import { decycle, retrocycle } from 'json-decycle'
-import _ from 'lodash/fp'
-import { walk, map } from './walker'
+import { walkie, map } from './walker'
 import { Node, RefOptions } from './types'
 
 /**
- *
+ * Replace duplicate objects refs with pointers to the first
+ * object seen.
  */
 export const addRefs = (obj: object, options?: RefOptions) => {
   const fn = decycle()
@@ -15,15 +15,12 @@ export const addRefs = (obj: object, options?: RefOptions) => {
 }
 
 /**
- *
+ * Rehydrate objects by replacing refs with actual objects.
  */
 export const deref = (obj: object, options?: RefOptions) => {
   const fn = retrocycle()
-  const clonedObj = _.cloneDeep(obj)
-  walk(clonedObj, { ...options, postOrder: true, jsonCompat: true }).forEach(
-    ({ parents, key, val }) => {
-      fn.call(parents[0], key ?? '', val)
-    }
-  )
-  return clonedObj
+  const walkFn = ({ parents, key, val }: Node) => {
+    fn.call(parents[0], key ?? '', val)
+  }
+  return walkie(obj, walkFn, { ...options, postOrder: true, jsonCompat: true })
 }
