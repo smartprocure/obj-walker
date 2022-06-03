@@ -1,3 +1,9 @@
+# 0.0.7
+
+* `map` iterates over output.
+* Added `walkie`.
+* Removed `mapKV`.
+
 # 0.0.6
 
 * Generic `walker` fn.
