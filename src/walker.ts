@@ -117,6 +117,7 @@ export const mapPost = (
   const isLeaf = _.negate(traverse)
   // Recursively walk object
   const _walk = (node: Node): void => {
+    console.dir(node, { depth: 10 })
     const { parents, path, val } = node
     const next = traverse(val) || []
     for (const [key, val] of Object.entries(next)) {
@@ -138,6 +139,7 @@ export const mapPost = (
       return
     }
     set(result, path, newVal)
+    console.dir(result, { depth: 10 })
   }
 
   const root = getRoot(obj, jsonCompat)

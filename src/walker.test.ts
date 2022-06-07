@@ -1,6 +1,6 @@
 import _ from 'lodash/fp'
 import { describe, expect, test } from '@jest/globals'
-import { walker, walk, walkie, map, mapLeaves } from './walker'
+import { walker, walk, walkie, map, mapPost, mapLeaves } from './walker'
 import { Node } from './types'
 
 describe('walker', () => {
@@ -578,6 +578,29 @@ describe('map', () => {
       d: { e: 'Bob', f: [10, 30, [31, 32], 40] },
       g: [25, { h: [26, 27] }],
       i: 'Frank',
+    })
+  })
+})
+
+describe('mapPost', () => {
+  test.only('Apply postFn after mapper', () => {
+    const obj = {
+      bob: {
+        scores: ['87', 'x97', 95, false],
+      },
+      joe: {
+        scores: [92, 92.5, '73.2', ''],
+      },
+    }
+    const result = mapPost(obj, ({ val, isLeaf }) => {
+      if (isLeaf) {
+        return parseFloat(val)
+      }
+      return Array.isArray(val) ? _.compact(val) : val
+    })
+    expect(result).toEqual({
+      bob: { scores: [87, 95] },
+      joe: { scores: [92, 92.5, 73.2] },
     })
   })
 })
