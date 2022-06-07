@@ -580,6 +580,53 @@ describe('map', () => {
       i: 'Frank',
     })
   })
+  test('map postorder', () => {
+    const obj = {
+      bob: {
+        scores: ['87', 'x97', 95, false],
+      },
+      joe: {
+        scores: [92, 92.5, '73.2', ''],
+      },
+    }
+    const result = map(
+      obj,
+      ({ val, isLeaf }) => {
+        if (isLeaf) {
+          return parseFloat(val)
+        }
+        return Array.isArray(val) ? _.compact(val) : val
+      },
+      { postOrder: true }
+    )
+    expect(result).toEqual({
+      bob: { scores: [87, 95] },
+      joe: { scores: [92, 92.5, 73.2] },
+    })
+  })
+  test('exclude nodes', () => {
+    const obj = {
+      joe: {
+        age: 42,
+        username: 'joe blow',
+        password: '1234',
+      },
+      frank: {
+        age: 39,
+        username: 'frankenstein',
+        password: 'password',
+      },
+    }
+    const result = map(obj, ({ key, val }) => {
+      if (key !== 'password') {
+        return val
+      }
+    })
+    expect(result).toEqual({
+      joe: { age: 42, username: 'joe blow' },
+      frank: { age: 39, username: 'frankenstein' },
+    })
+  })
 })
 
 describe('mapLeaves', () => {

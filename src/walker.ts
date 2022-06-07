@@ -1,6 +1,6 @@
-import { set } from 'lodash'
+import { set, unset } from 'lodash'
 import _ from 'lodash/fp'
-import { WalkFn, Mapper, MapOptions, Options, Node, WOptions } from './types'
+import { WalkFn, Mapper, Options, Node, WalkOptions } from './types'
 
 export const isObjectOrArray = _.overSome([_.isPlainObject, _.isArray])
 
@@ -23,7 +23,7 @@ const defTraverse = (x: any) => isObjectOrArray(x) && !_.isEmpty(x) && x
  * Call walkFn for each node visited. Supports traversing the object in
  * arbitrary ways by passing a traverse fn in options.
  */
-export const walker = (obj: object, walkFn: WalkFn, options: WOptions = {}) => {
+export const walker = (obj: object, walkFn: WalkFn, options: Options = {}) => {
   const { postOrder, jsonCompat, traverse = defTraverse } = options
   // A leaf is a node that can't be traversed
   const isLeaf = _.negate(traverse)
@@ -58,29 +58,23 @@ export const walker = (obj: object, walkFn: WalkFn, options: WOptions = {}) => {
   _walk(root)
 }
 
-/**
- * Map over an object modifying values with a fn depth-first in a
- * preorder manner. Exclude nodes by returning undefined. Undefined
- * array values will not be excluded. The output of the mapper fn
- * will be traversed if possible.
- */
-export const map = (obj: object, mapper: Mapper, options: MapOptions = {}) => {
-  if (!isObjectOrArray(obj)) {
-    return obj
-  }
-  const result = _.isPlainObject(obj) ? {} : []
+const shouldSkipVal = (val: any, node: Node) =>
+  val === undefined && !parentIsArray(node)
+
+const mapPre = (obj: object, mapper: Mapper, options: Options) => {
   const { jsonCompat, traverse = defTraverse } = options
   // A leaf is a node that can't be traversed
   const isLeaf = _.negate(traverse)
   // Recursively walk object
   const _walk = (node: Node): void => {
+    const { parents, path } = node
     const newVal = mapper(node)
-    // Exclude node if undefined and parent is not an array
-    if (newVal === undefined && !parentIsArray(node)) {
+    // Should skip value
+    if (shouldSkipVal(newVal, node)) {
+      unset(obj, path)
       return
     }
-    const { parents, path } = node
-    set(result, path, newVal)
+    set(obj, path, newVal)
     const next = traverse(newVal) || []
     for (const [key, val] of Object.entries(next)) {
       const nodeParents = [newVal, ...parents]
@@ -96,9 +90,42 @@ export const map = (obj: object, mapper: Mapper, options: MapOptions = {}) => {
       _walk(node)
     }
   }
-
   const root = getRoot(obj, jsonCompat)
   _walk(root)
+}
+
+const mapPost = (obj: object, mapper: Mapper, options: Options) =>
+  walker(
+    obj,
+    (node) => {
+      const { path } = node
+      const newVal = mapper(node)
+      // Should skip value
+      if (shouldSkipVal(newVal, node)) {
+        unset(obj, path)
+        return
+      }
+      set(obj, path, newVal)
+    },
+    { ...options, postOrder: true }
+  )
+
+/**
+ * Map over an object modifying values with a fn depth-first in a
+ * preorder or postorder manner. Exclude nodes by returning undefined.
+ * Undefined array values will not be excluded. The output of the mapper fn
+ * will be traversed if possible when traversing preorder.
+ */
+export const map = (obj: object, mapper: Mapper, options: Options = {}) => {
+  if (!isObjectOrArray(obj)) {
+    return obj
+  }
+  const result = _.cloneDeep(obj)
+  if (options.postOrder) {
+    mapPost(result, mapper, options)
+  } else {
+    mapPre(result, mapper, options)
+  }
 
   return result
 }
@@ -107,7 +134,7 @@ export const map = (obj: object, mapper: Mapper, options: MapOptions = {}) => {
  * Walk an object depth-first in a preorder (default) or
  * postorder manner. Returns an array of nodes.
  */
-export const walk = (obj: object, options: Options = {}) => {
+export const walk = (obj: object, options: WalkOptions = {}) => {
   const nodes: Node[] = []
   const walkFn = (node: Node) => {
     nodes.push(node)
@@ -128,7 +155,7 @@ export const walk = (obj: object, options: Options = {}) => {
  * node as needed in order to transform the object. The cloned object
  * is returned.
  */
-export const walkie = (obj: object, walkFn: WalkFn, options: Options = {}) => {
+export const walkie = (obj: object, walkFn: WalkFn, options?: WalkOptions) => {
   const clonedObj = _.cloneDeep(obj)
   walk(clonedObj, options).forEach(walkFn)
   return clonedObj
@@ -146,8 +173,8 @@ export const mapLeaves = (obj: object, mapper: Mapper, options?: Options) => {
   const result = _.isPlainObject(obj) ? {} : []
   for (const node of nodes) {
     const newVal = mapper(node)
-    // Exclude node if undefined and parent is not an array
-    if (newVal === undefined && !parentIsArray(node)) {
+    // Should skip value
+    if (shouldSkipVal(newVal, node)) {
       continue
     }
     set(result, node.path, newVal)
