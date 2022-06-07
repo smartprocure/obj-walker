@@ -1,6 +1,6 @@
 import _ from 'lodash/fp'
 import { describe, expect, test } from '@jest/globals'
-import { walker, walk, walkie, map, mapPost, mapLeaves } from './walker'
+import { walker, walk, walkie, map, mapLeaves } from './walker'
 import { Node } from './types'
 
 describe('walker', () => {
@@ -580,10 +580,7 @@ describe('map', () => {
       i: 'Frank',
     })
   })
-})
-
-describe('mapPost', () => {
-  test.only('Apply postFn after mapper', () => {
+  test('map postorder', () => {
     const obj = {
       bob: {
         scores: ['87', 'x97', 95, false],
@@ -592,15 +589,42 @@ describe('mapPost', () => {
         scores: [92, 92.5, '73.2', ''],
       },
     }
-    const result = mapPost(obj, ({ val, isLeaf }) => {
-      if (isLeaf) {
-        return parseFloat(val)
-      }
-      return Array.isArray(val) ? _.compact(val) : val
-    })
+    const result = map(
+      obj,
+      ({ val, isLeaf }) => {
+        if (isLeaf) {
+          return parseFloat(val)
+        }
+        return Array.isArray(val) ? _.compact(val) : val
+      },
+      { postOrder: true }
+    )
     expect(result).toEqual({
       bob: { scores: [87, 95] },
       joe: { scores: [92, 92.5, 73.2] },
+    })
+  })
+  test('exclude nodes', () => {
+    const obj = {
+      joe: {
+        age: 42,
+        username: 'joe blow',
+        password: '1234',
+      },
+      frank: {
+        age: 39,
+        username: 'frankenstein',
+        password: 'password',
+      },
+    }
+    const result = map(obj, ({ key, val }) => {
+      if (key !== 'password') {
+        return val
+      }
+    })
+    expect(result).toEqual({
+      joe: { age: 42, username: 'joe blow' },
+      frank: { age: 39, username: 'frankenstein' },
     })
   })
 })

@@ -1,13 +1,14 @@
 export interface Options {
   postOrder?: boolean
-  leavesOnly?: boolean
   jsonCompat?: boolean
   traverse?(x: any): any
 }
 
+export interface WalkOptions extends Options {
+  leavesOnly?: boolean
+}
+
 export type RefOptions = Pick<Options, 'traverse'>
-export type MapOptions = Pick<Options, 'jsonCompat' | 'traverse'>
-export type WOptions = Exclude<Options, 'leavesOnly'>
 
 export interface Node {
   key: string | undefined

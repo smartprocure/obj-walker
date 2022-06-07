@@ -1,3 +1,7 @@
+# 0.0.8
+
+* Deep clone object for `map`. Allow `postOrder` option.
+
 # 0.0.7
 
 * `map` iterates over output.

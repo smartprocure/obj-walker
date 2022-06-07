@@ -21,7 +21,7 @@ may be incompleted. Prefer `walkie` in these scenarios instead.
 ## walker
 
 ```typescript
-walker(obj: object, walkFn: WalkFn, options: WOptions = {}) => void
+walker(obj: object, walkFn: WalkFn, options: Options = {}) => void
 ```
 
 Generic walking fn that traverse an object in preorder (default) or postorder,
@@ -35,6 +35,12 @@ export interface Node {
   path: string[]
   isLeaf: boolean
   isRoot: boolean
+}
+
+export interface Options {
+  postOrder?: boolean
+  jsonCompat?: boolean
+  traverse?(x: any): any
 }
 ```
 
@@ -100,18 +106,15 @@ that fn.
 ## walk
 
 ```typescript
-walk(obj: object, options: Options = {}) => Node[]
+walk(obj: object, options: WalkOptions = {}) => Node[]
 ```
 
 Walk an object. Returns an array of all nodes in the object in either
 preorder or postorder.
 
 ```typescript
-interface Options {
-  postOrder?: boolean
+export interface WalkOptions extends Options {
   leavesOnly?: boolean
-  jsonCompat?: boolean
-  traverse?(x: any): any
 }
 ```
 
@@ -134,7 +137,7 @@ walk(obj).map((x) => x.path)
 Produces:
 
 ```typescript
-[
+;[
   [],
   ['a'],
   ['a', 'b'],
@@ -151,7 +154,11 @@ Produces:
 ## walkie
 
 ```typescript
-walkie(obj: object, walkFn: WalkFn, options: Options = {}) => object
+walkie(obj: object, walkFn: WalkFn, options: WalkOptions = {}) => object
+```
+
+```typescript
+export type WalkFn = (node: Node) => void
 ```
 
 Walk-each ~ walkie
@@ -240,18 +247,17 @@ Produces:
 ## map
 
 Map over an object modifying values with a fn depth-first in a
-preorder manner. Exclude nodes by returning undefined. Undefined
-array values will not be excluded. The output of the mapper fn
-will be traversed if possible.
+preorder or postorder manner. Exclude nodes by returning undefined.
+Undefined array values will not be excluded. The output of the mapper fn
+will be traversed if possible when traversing preorder.
 
 ```typescript
-map(obj: object, mapper: Mapper, options: MapOptions = {}) => object
+map(obj: object, mapper: Mapper, options: Options = {}) => object
 ```
 
-Notice the custom `traverse` fn. This determines how
-to traverse into an object or array. By default, we only
-traverse into plain objects and arrays and iterate over there
-key/value pairs.
+```typescript
+export type Mapper = (node: Node) => any
+```
 
 ```typescript
 import { map } from 'obj-walker'
@@ -282,6 +288,38 @@ Produces:
 }
 ```
 
+Postorder
+
+```typescript
+const obj = {
+  bob: {
+    scores: ['87', 'x97', 95, false],
+  },
+  joe: {
+    scores: [92, 92.5, '73.2', ''],
+  },
+}
+const result = map(
+  obj,
+  ({ val, isLeaf }) => {
+    if (isLeaf) {
+      return parseFloat(val)
+    }
+    return Array.isArray(val) ? _.compact(val) : val
+  },
+  { postOrder: true }
+)
+```
+
+Produces:
+
+```typescript
+{
+  bob: { scores: [87, 95] },
+  joe: { scores: [92, 92.5, 73.2] },
+}
+```
+
 ## mapLeaves
 
 ```typescript
@@ -294,8 +332,6 @@ which traverses plain objects and arrays, or your custom `traverse` fn.
 
 Exclude nodes by returning undefined. Undefined array values will not
 be excluded.
-
-`mapper` is passed a `Node` object.
 
 ```typescript
 import { mapLeaves } from 'obj-walker'
