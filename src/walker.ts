@@ -117,7 +117,6 @@ export const mapPost = (
   const isLeaf = _.negate(traverse)
   // Recursively walk object
   const _walk = (node: Node): void => {
-    console.dir(node, { depth: 10 })
     const { parents, path, val } = node
     const next = traverse(val) || []
     for (const [key, val] of Object.entries(next)) {
@@ -133,6 +132,7 @@ export const mapPost = (
       }
       _walk(node)
     }
+    console.dir(node, { depth: 10 })
     const newVal = mapper(node)
     // Exclude node if undefined and parent is not an array
     if (newVal === undefined && !parentIsArray(node)) {
