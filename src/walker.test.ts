@@ -580,6 +580,27 @@ describe('map', () => {
       i: 'Frank',
     })
   })
+  test('Apply postFn after mapper', () => {
+    const obj = {
+      bob: {
+        scores: ['87', 'x97', 95, false],
+      },
+      joe: {
+        scores: [92, 92.5, '73.2', ''],
+      },
+    }
+    const result = map(
+      obj,
+      ({ val, isLeaf }) => (isLeaf ? parseFloat(val) : val),
+      {
+        postFn: ({ val }) => (Array.isArray(val) ? _.compact(val) : val),
+      }
+    )
+    expect(result).toEqual({
+      bob: { scores: [87, 95] },
+      joe: { scores: [92, 92.5, 73.2] },
+    })
+  })
 })
 
 describe('mapLeaves', () => {

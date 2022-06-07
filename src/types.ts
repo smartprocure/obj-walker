@@ -6,8 +6,13 @@ export interface Options {
 }
 
 export type RefOptions = Pick<Options, 'traverse'>
-export type MapOptions = Pick<Options, 'jsonCompat' | 'traverse'>
 export type WOptions = Exclude<Options, 'leavesOnly'>
+
+export interface MapOptions {
+  jsonCompat?: boolean
+  traverse?(x: any): any
+  postFn?: Mapper
+}
 
 export interface Node {
   key: string | undefined

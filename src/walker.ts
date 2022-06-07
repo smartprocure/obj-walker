@@ -58,6 +58,9 @@ export const walker = (obj: object, walkFn: WalkFn, options: WOptions = {}) => {
   _walk(root)
 }
 
+const shouldSkipVal = (val: any, node: Node) =>
+  val === undefined && !parentIsArray(node)
+
 /**
  * Map over an object modifying values with a fn depth-first in a
  * preorder manner. Exclude nodes by returning undefined. Undefined
@@ -69,17 +72,17 @@ export const map = (obj: object, mapper: Mapper, options: MapOptions = {}) => {
     return obj
   }
   const result = _.isPlainObject(obj) ? {} : []
-  const { jsonCompat, traverse = defTraverse } = options
+  const { jsonCompat, traverse = defTraverse, postFn } = options
   // A leaf is a node that can't be traversed
   const isLeaf = _.negate(traverse)
   // Recursively walk object
   const _walk = (node: Node): void => {
+    const { parents, path } = node
     const newVal = mapper(node)
-    // Exclude node if undefined and parent is not an array
-    if (newVal === undefined && !parentIsArray(node)) {
+    // Skip setting value
+    if (shouldSkipVal(newVal, node)) {
       return
     }
-    const { parents, path } = node
     set(result, path, newVal)
     const next = traverse(newVal) || []
     for (const [key, val] of Object.entries(next)) {
@@ -94,6 +97,15 @@ export const map = (obj: object, mapper: Mapper, options: MapOptions = {}) => {
         isRoot: false,
       }
       _walk(node)
+    }
+    if (postFn) {
+      const newNode = {...node, val: newVal}
+      const newNewVal = postFn(newNode)
+      // Skip setting value
+      if (shouldSkipVal(newNewVal, node)) {
+        return
+      }
+      set(result, path, newNewVal)
     }
   }
 
@@ -146,8 +158,8 @@ export const mapLeaves = (obj: object, mapper: Mapper, options?: Options) => {
   const result = _.isPlainObject(obj) ? {} : []
   for (const node of nodes) {
     const newVal = mapper(node)
-    // Exclude node if undefined and parent is not an array
-    if (newVal === undefined && !parentIsArray(node)) {
+    // Skip setting value
+    if (shouldSkipVal(newVal, node)) {
       continue
     }
     set(result, node.path, newVal)
