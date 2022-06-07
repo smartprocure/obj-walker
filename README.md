@@ -100,7 +100,6 @@ that fn.
   },
   ...
 ]
-
 ```
 
 ## walk
@@ -137,7 +136,7 @@ walk(obj).map((x) => x.path)
 Produces:
 
 ```typescript
-;[
+[
   [],
   ['a'],
   ['a', 'b'],
