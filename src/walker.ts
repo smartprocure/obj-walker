@@ -103,6 +103,49 @@ export const map = (obj: object, mapper: Mapper, options: MapOptions = {}) => {
   return result
 }
 
+export const mapPost = (
+  obj: object,
+  mapper: Mapper,
+  options: MapOptions = {}
+) => {
+  if (!isObjectOrArray(obj)) {
+    return obj
+  }
+  const result = _.isPlainObject(obj) ? {} : []
+  const { jsonCompat, traverse = defTraverse } = options
+  // A leaf is a node that can't be traversed
+  const isLeaf = _.negate(traverse)
+  // Recursively walk object
+  const _walk = (node: Node): void => {
+    const { parents, path, val } = node
+    const next = traverse(val) || []
+    for (const [key, val] of Object.entries(next)) {
+      const nodeParents = [val, ...parents]
+      const nodePath = [...path, key]
+      const node = {
+        key,
+        val,
+        parents: nodeParents,
+        path: nodePath,
+        isLeaf: isLeaf(val),
+        isRoot: false,
+      }
+      _walk(node)
+    }
+    const newVal = mapper(node)
+    // Exclude node if undefined and parent is not an array
+    if (newVal === undefined && !parentIsArray(node)) {
+      return
+    }
+    set(result, path, newVal)
+  }
+
+  const root = getRoot(obj, jsonCompat)
+  _walk(root)
+
+  return result
+}
+
 /**
  * Walk an object depth-first in a preorder (default) or
  * postorder manner. Returns an array of nodes.
