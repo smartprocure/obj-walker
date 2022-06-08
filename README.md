@@ -16,7 +16,7 @@ option to `true`.
 Custom traversal functions are supported. This allows you to walk tree-like
 structures, such as JSON schema, in a more efficient and logical way. `map`
 does not work particularly well for this use case since the path to set values
-may be incompleted. Prefer `walkie` in these scenarios instead.
+may be incomplete. Prefer `walkie` in these scenarios instead.
 
 ## walker
 
