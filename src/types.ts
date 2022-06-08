@@ -1,11 +1,15 @@
 export interface Options {
   postOrder?: boolean
   jsonCompat?: boolean
-  traverse?(x: any): any
+  traverse?(val: any): any
 }
 
 export interface WalkOptions extends Options {
   leavesOnly?: boolean
+}
+
+export interface MapOptions extends Options {
+  shouldSkip?(val: any, node: Node): boolean
 }
 
 export type RefOptions = Pick<Options, 'traverse'>
@@ -22,3 +26,9 @@ export interface Node {
 
 export type WalkFn = (node: Node) => void
 export type Mapper = (node: Node) => any
+export type Map = (obj: object, mapper: Mapper, options?: MapOptions) => object
+export type MapInternal = (
+  obj: object,
+  mapper: Mapper,
+  options: Required<MapOptions>
+) => void

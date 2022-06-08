@@ -1,6 +1,14 @@
 import { set, unset } from 'lodash'
 import _ from 'lodash/fp'
-import { WalkFn, Mapper, Options, Node, WalkOptions } from './types'
+import {
+  WalkFn,
+  Map,
+  Options,
+  Node,
+  MapOptions,
+  WalkOptions,
+  MapInternal,
+} from './types'
 
 export const isObjectOrArray = _.overSome([_.isPlainObject, _.isArray])
 
@@ -17,6 +25,9 @@ const getRoot = (obj: object, jsonCompat = false): Node => {
 }
 
 const defTraverse = (x: any) => isObjectOrArray(x) && !_.isEmpty(x) && x
+
+const defShouldSkip = (val: any, node: Node) =>
+  val === undefined && !parentIsArray(node)
 
 /**
  * Walk an object depth-first in a preorder (default) or postorder manner.
@@ -58,11 +69,8 @@ export const walker = (obj: object, walkFn: WalkFn, options: Options = {}) => {
   _walk(root)
 }
 
-const shouldSkipVal = (val: any, node: Node) =>
-  val === undefined && !parentIsArray(node)
-
-const mapPre = (obj: object, mapper: Mapper, options: Options) => {
-  const { jsonCompat, traverse = defTraverse } = options
+const mapPre: MapInternal = (obj, mapper, options) => {
+  const { jsonCompat, traverse, shouldSkip } = options
   // A leaf is a node that can't be traversed
   const isLeaf = _.negate(traverse)
   // Recursively walk object
@@ -70,7 +78,7 @@ const mapPre = (obj: object, mapper: Mapper, options: Options) => {
     const { parents, path } = node
     const newVal = mapper(node)
     // Should skip value
-    if (shouldSkipVal(newVal, node)) {
+    if (shouldSkip(newVal, node)) {
       unset(obj, path)
       return
     }
@@ -94,14 +102,14 @@ const mapPre = (obj: object, mapper: Mapper, options: Options) => {
   _walk(root)
 }
 
-const mapPost = (obj: object, mapper: Mapper, options: Options) =>
+const mapPost: MapInternal = (obj, mapper, options) =>
   walker(
     obj,
     (node) => {
       const { path } = node
       const newVal = mapper(node)
       // Should skip value
-      if (shouldSkipVal(newVal, node)) {
+      if (options.shouldSkip(newVal, node)) {
         unset(obj, path)
         return
       }
@@ -110,21 +118,32 @@ const mapPost = (obj: object, mapper: Mapper, options: Options) =>
     { ...options, postOrder: true }
   )
 
+const setMapDefaults = (options: MapOptions) => ({
+  postOrder: options.postOrder ?? false,
+  jsonCompat: options.jsonCompat ?? false,
+  shouldSkip: options.shouldSkip ?? defShouldSkip,
+  traverse: options.traverse ?? defTraverse,
+})
+
 /**
  * Map over an object modifying values with a fn depth-first in a
- * preorder or postorder manner. Exclude nodes by returning undefined.
- * Undefined array values will not be excluded. The output of the mapper fn
+ * preorder or postorder manner. The output of the mapper fn
  * will be traversed if possible when traversing preorder.
+ *
+ * By default, nodes will be excluded by returning undefined.
+ * Undefined array values will not be excluded. To customize
+ * pass a fn for options.shouldSkip.
  */
-export const map = (obj: object, mapper: Mapper, options: Options = {}) => {
+export const map: Map = (obj, mapper, options = {}) => {
   if (!isObjectOrArray(obj)) {
     return obj
   }
+  const opts = setMapDefaults(options)
   const result = _.cloneDeep(obj)
   if (options.postOrder) {
-    mapPost(result, mapper, options)
+    mapPost(result, mapper, opts)
   } else {
-    mapPre(result, mapper, options)
+    mapPre(result, mapper, opts)
   }
 
   return result
@@ -162,19 +181,21 @@ export const walkie = (obj: object, walkFn: WalkFn, options?: WalkOptions) => {
 }
 
 /**
- * Map over the leaves of an object with a fn. Exclude nodes by returning
- * undefined. Undefined array values will not be excluded.
+ * Map over the leaves of an object with a fn. By default, nodes will be excluded
+ * by returning undefined. Undefined array values will not be excluded. To customize
+ * pass a fn for options.shouldSkip.
  */
-export const mapLeaves = (obj: object, mapper: Mapper, options?: Options) => {
+export const mapLeaves: Map = (obj, mapper, options = {}) => {
   if (!isObjectOrArray(obj)) {
     return obj
   }
-  const nodes = walk(obj, { ...options, leavesOnly: true })
+  const opts = setMapDefaults(options)
+  const nodes = walk(obj, { ...opts, leavesOnly: true })
   const result = _.isPlainObject(obj) ? {} : []
   for (const node of nodes) {
     const newVal = mapper(node)
     // Should skip value
-    if (shouldSkipVal(newVal, node)) {
+    if (opts.shouldSkip(newVal, node)) {
       continue
     }
     set(result, node.path, newVal)

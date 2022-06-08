@@ -136,7 +136,7 @@ walk(obj).map((x) => x.path)
 Produces:
 
 ```typescript
-[
+;[
   [],
   ['a'],
   ['a', 'b'],
@@ -246,16 +246,23 @@ Produces:
 ## map
 
 Map over an object modifying values with a fn depth-first in a
-preorder or postorder manner. Exclude nodes by returning undefined.
-Undefined array values will not be excluded. The output of the mapper fn
+preorder or postorder manner. The output of the mapper fn
 will be traversed if possible when traversing preorder.
 
+By default, nodes will be excluded by returning undefined.
+Undefined array values will not be excluded. To customize
+pass a fn for options.shouldSkip.
+
 ```typescript
-map(obj: object, mapper: Mapper, options: Options = {}) => object
+map(obj: object, mapper: Mapper, options: MapOptions = {}) => object
 ```
 
 ```typescript
 export type Mapper = (node: Node) => any
+
+export interface MapOptions extends Options {
+  shouldSkip?(val: any, node: Node): boolean
+}
 ```
 
 ```typescript
@@ -297,6 +304,9 @@ const obj = {
   joe: {
     scores: [92, 92.5, '73.2', ''],
   },
+  frank: {
+    scores: ['abc', ''],
+  },
 }
 const result = map(
   obj,
@@ -316,21 +326,57 @@ Produces:
 {
   bob: { scores: [87, 95] },
   joe: { scores: [92, 92.5, 73.2] },
+  frank: { scores: [] },
+}
+```
+
+Custom `shouldSkip` fn
+
+```typescript
+const obj = {
+  bob: {
+    scores: ['87', 'x97', 95, false],
+  },
+  joe: {
+    scores: [92, 92.5, '73.2', ''],
+  },
+  frank: {
+    scores: ['abc', ''],
+  },
+}
+
+const shouldSkip = (val: any, node: Node) =>
+  _.isEmpty(val) && !parentIsArray(node)
+const result = map(
+  obj,
+  ({ val, isLeaf }) => {
+    if (isLeaf) {
+      return parseFloat(val)
+    }
+    return Array.isArray(val) ? _.compact(val) : val
+  },
+  { postOrder: true, shouldSkip }
+)
+```
+
+Produces:
+
+```typescript
+{
+  bob: { scores: [87, 95] },
+  joe: { scores: [92, 92.5, 73.2] },
 }
 ```
 
 ## mapLeaves
 
 ```typescript
-mapLeaves(obj: object, mapper: Mapper, options?: Options) => object
+mapLeaves(obj: object, mapper: Mapper, options?: MapOptions) => object
 ```
 
-Map over the leaves of an object, where a leaf is defined as a value
-that is not traversable according to either the default `traverse` fn
-which traverses plain objects and arrays, or your custom `traverse` fn.
-
-Exclude nodes by returning undefined. Undefined array values will not
-be excluded.
+Map over the leaves of an object with a fn. By default, nodes will be excluded
+by returning undefined. Undefined array values will not be excluded. To customize
+pass a fn for options.shouldSkip.
 
 ```typescript
 import { mapLeaves } from 'obj-walker'

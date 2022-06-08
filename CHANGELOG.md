@@ -1,3 +1,7 @@
+# 0.0.9
+
+* Custom `shouldSkip` fn for `map` and `mapLeaves`.
+
 # 0.0.8
 
 * Deep clone object for `map`. Allow `postOrder` option.

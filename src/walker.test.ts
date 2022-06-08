@@ -1,6 +1,6 @@
 import _ from 'lodash/fp'
 import { describe, expect, test } from '@jest/globals'
-import { walker, walk, walkie, map, mapLeaves } from './walker'
+import { walker, walk, walkie, map, mapLeaves, parentIsArray } from './walker'
 import { Node } from './types'
 
 describe('walker', () => {
@@ -588,6 +588,9 @@ describe('map', () => {
       joe: {
         scores: [92, 92.5, '73.2', ''],
       },
+      frank: {
+        scores: ['abc', ''],
+      },
     }
     const result = map(
       obj,
@@ -598,6 +601,36 @@ describe('map', () => {
         return Array.isArray(val) ? _.compact(val) : val
       },
       { postOrder: true }
+    )
+    expect(result).toEqual({
+      bob: { scores: [87, 95] },
+      joe: { scores: [92, 92.5, 73.2] },
+      frank: { scores: [] },
+    })
+  })
+  test('custom shouldSkip fn', () => {
+    const obj = {
+      bob: {
+        scores: ['87', 'x97', 95, false],
+      },
+      joe: {
+        scores: [92, 92.5, '73.2', ''],
+      },
+      frank: {
+        scores: ['abc', ''],
+      },
+    }
+    const shouldSkip = (val: any, node: Node) =>
+      _.isEmpty(val) && !parentIsArray(node)
+    const result = map(
+      obj,
+      ({ val, isLeaf }) => {
+        if (isLeaf) {
+          return parseFloat(val)
+        }
+        return Array.isArray(val) ? _.compact(val) : val
+      },
+      { postOrder: true, shouldSkip }
     )
     expect(result).toEqual({
       bob: { scores: [87, 95] },
