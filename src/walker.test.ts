@@ -573,6 +573,7 @@ describe('map', () => {
     const result = map(obj, ({ val }) =>
       Array.isArray(val) ? _.compact(val) : val
     )
+    expect(obj).toEqual(obj)
     expect(result).toEqual({
       a: { b: 23, c: 24 },
       d: { e: 'Bob', f: [10, 30, [31, 32], 40] },
@@ -602,6 +603,7 @@ describe('map', () => {
       },
       { postOrder: true }
     )
+    expect(obj).toEqual(obj)
     expect(result).toEqual({
       bob: { scores: [87, 95] },
       joe: { scores: [92, 92.5, 73.2] },
@@ -632,6 +634,7 @@ describe('map', () => {
       },
       { postOrder: true, shouldSkip }
     )
+    expect(obj).toEqual(obj)
     expect(result).toEqual({
       bob: { scores: [87, 95] },
       joe: { scores: [92, 92.5, 73.2] },
@@ -655,6 +658,7 @@ describe('map', () => {
         return val
       }
     })
+    expect(obj).toEqual(obj)
     expect(result).toEqual({
       joe: { age: 42, username: 'joe blow' },
       frank: { age: 39, username: 'frankenstein' },
@@ -675,6 +679,7 @@ describe('mapLeaves', () => {
       },
     }
     const result = mapLeaves(obj, ({ val }) => val + 1)
+    expect(obj).toEqual(obj)
     expect(result).toEqual({
       a: { b: 24, c: 25 },
       d: { e: 101, f: [11, 21, 31] },
@@ -699,6 +704,7 @@ describe('mapLeaves', () => {
       },
       { traverse: (x: any) => _.isPlainObject(x) && x }
     )
+    expect(obj).toEqual(obj)
     expect(result).toEqual({
       a: {
         b: 23,
