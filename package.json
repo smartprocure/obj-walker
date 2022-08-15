@@ -29,7 +29,8 @@
     "ref",
     "flatten",
     "find",
-    "leaves"
+    "leaves",
+    "traverse"
   ],
   "license": "ISC",
   "prettier": {
