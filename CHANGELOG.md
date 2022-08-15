@@ -1,6 +1,8 @@
 # 1.0.0
 
 * Remove `traverse` option from all mapping fns. 
+* `findNode` fn.
+* `flatten` fn.
 
 # 0.0.9
 
