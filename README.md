@@ -423,7 +423,7 @@ const obj = {
   likes: ['Stock Market', 'Running'],
 }
 
-const node = findNode(obj, (node) => {
+findNode(obj, (node) => {
   return _.isEqual(node.path, ['address', 'zipCode'])
 })
 ```
@@ -445,6 +445,44 @@ Produces:
   path: ['address', 'zipCode'],
   isLeaf: true,
   isRoot: false,
+}
+```
+
+## flatten
+
+```typescript
+flatten(obj: object, options?: WalkOptions & FlattenOptions) => Record<string, any>
+```
+
+Flatten an object's keys. Optionally pass `separator` to determine
+what character to join keys with. Defaults to '.'.
+
+```typescript
+import { flatten } from 'obj-walker'
+
+const obj = {
+  a: {
+    b: 23,
+    c: 24,
+  },
+  d: {
+    e: 100,
+    f: [10, 20, 30],
+  },
+}
+flatten(obj)
+```
+
+Produces:
+
+```typescript
+{
+  'a.b': 23,
+  'a.c': 24,
+  'd.e': 100,
+  'd.f.0': 10,
+  'd.f.1': 20,
+  'd.f.2': 30,
 }
 ```
 

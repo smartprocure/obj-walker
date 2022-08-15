@@ -2,7 +2,6 @@ import { set, unset } from 'lodash'
 import _ from 'lodash/fp'
 import {
   WalkFn,
-  FindFn,
   Map,
   Options,
   Node,
@@ -10,6 +9,8 @@ import {
   WalkOptions,
   MapInternal,
   FindNode,
+  FlattenOptions,
+  Flatten,
 } from './types'
 import { isObjectOrArray, defShouldSkip, defTraverse, getRoot } from './util'
 
@@ -75,6 +76,7 @@ export const findNode: FindNode = (obj, findFn, options = {}) => {
     if (e === FOUND) {
       return node
     }
+    throw e
   }
 }
 
@@ -208,6 +210,20 @@ export const mapLeaves: Map = (obj, mapper, options = {}) => {
       continue
     }
     set(result, node.path, newVal)
+  }
+  return result
+}
+
+/**
+ * Flatten an object's keys. Optionally pass `separator` to determine
+ * what character to join keys with. Defaults to '.'.
+ */
+export const flatten: Flatten = (obj, options = {}) => {
+  const nodes = walk(obj, { ...options, leavesOnly: true })
+  const separator = options?.separator || '.'
+  const result: Record<string, any> = {}
+  for (const node of nodes) {
+    result[node.path.join(separator)] = node.val
   }
   return result
 }

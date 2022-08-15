@@ -38,3 +38,12 @@ export type MapInternal = (
   mapper: Mapper,
   options: Required<MapOptions>
 ) => void
+
+export interface FlattenOptions {
+  separator?: string
+}
+
+export type Flatten = (
+  obj: object,
+  options?: WalkOptions & FlattenOptions
+) => Record<string, any>

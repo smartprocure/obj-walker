@@ -1,6 +1,14 @@
 import _ from 'lodash/fp'
 import { describe, expect, test } from '@jest/globals'
-import { walker, walk, walkie, map, mapLeaves, findNode } from './walker'
+import {
+  flatten,
+  walker,
+  walk,
+  walkie,
+  map,
+  mapLeaves,
+  findNode,
+} from './walker'
 import { parentIsArray } from './util'
 import { Node } from './types'
 
@@ -524,6 +532,13 @@ describe('findNode', () => {
     const node = findNode(obj, (node) => node.key === 'countryCode')
     expect(node).toBeUndefined()
   })
+  test('should throw if an exception is throw in findFn', () => {
+    expect(() => {
+      findNode(obj, () => {
+        throw 'fail'
+      })
+    }).toThrow()
+  })
 })
 
 describe('walkie', () => {
@@ -723,6 +738,108 @@ describe('mapLeaves', () => {
     expect(result).toEqual({
       a: { b: 24, c: 25 },
       d: { e: 101, f: [11, 21, 31] },
+    })
+  })
+})
+
+describe('flatten', () => {
+  test('should flatten object', () => {
+    const obj = {
+      a: {
+        b: 23,
+        c: 24,
+      },
+      d: {
+        e: 100,
+        f: [10, 20, 30],
+      },
+    }
+    const result = flatten(obj)
+    expect(result).toEqual({
+      'a.b': 23,
+      'a.c': 24,
+      'd.e': 100,
+      'd.f.0': 10,
+      'd.f.1': 20,
+      'd.f.2': 30,
+    })
+  })
+  test('should flatten with custom traversal and custom separator', () => {
+    const obj = {
+      bsonType: 'object',
+      additionalProperties: false,
+      required: ['name', 'type'],
+      properties: {
+        _id: {
+          bsonType: 'objectId',
+        },
+        name: { bsonType: 'string' },
+        numberOfEmployees: {
+          bsonType: 'string',
+          enum: ['1 - 5', '6 - 20', '21 - 50', '51 - 200', '201 - 500', '500+'],
+        },
+        addresses: {
+          bsonType: 'array',
+          items: {
+            bsonType: 'object',
+            additionalProperties: false,
+            properties: {
+              address: {
+                bsonType: 'object',
+                additionalProperties: false,
+                properties: {
+                  street: { bsonType: 'string' },
+                  city: { bsonType: 'string' },
+                  county: { bsonType: 'string' },
+                  state: { bsonType: 'string' },
+                  zip: { bsonType: 'string' },
+                  country: { bsonType: 'string' },
+                },
+              },
+              name: { bsonType: 'string' },
+              isPrimary: { bsonType: 'bool' },
+            },
+          },
+        },
+        integrations: {
+          bsonType: 'object',
+          additionalProperties: true,
+          properties: {
+            stripe: {
+              bsonType: 'object',
+              additionalProperties: true,
+              properties: {
+                priceId: {
+                  bsonType: 'string',
+                },
+                subscriptionStatus: {
+                  bsonType: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    }
+    const traverse = (x: any) => x.properties || (x.items && { items: x.items })
+    const result = flatten(obj, { traverse, separator: '_' })
+    expect(result).toEqual({
+      _id: { bsonType: 'objectId' },
+      name: { bsonType: 'string' },
+      numberOfEmployees: {
+        bsonType: 'string',
+        enum: ['1 - 5', '6 - 20', '21 - 50', '51 - 200', '201 - 500', '500+'],
+      },
+      addresses_items_address_street: { bsonType: 'string' },
+      addresses_items_address_city: { bsonType: 'string' },
+      addresses_items_address_county: { bsonType: 'string' },
+      addresses_items_address_state: { bsonType: 'string' },
+      addresses_items_address_zip: { bsonType: 'string' },
+      addresses_items_address_country: { bsonType: 'string' },
+      addresses_items_name: { bsonType: 'string' },
+      addresses_items_isPrimary: { bsonType: 'bool' },
+      integrations_stripe_priceId: { bsonType: 'string' },
+      integrations_stripe_subscriptionStatus: { bsonType: 'string' },
     })
   })
 })

@@ -1,6 +1,9 @@
 import _ from 'lodash/fp'
 import { Node } from './types'
 
+/**
+ * Is the value a plain object or an array?
+ */
 export const isObjectOrArray = _.overSome([_.isPlainObject, _.isArray])
 
 /**
@@ -9,6 +12,9 @@ export const isObjectOrArray = _.overSome([_.isPlainObject, _.isArray])
 export const defShouldSkip = (val: any, node: Node) =>
   val === undefined && !parentIsArray(node)
 
+/**
+ * Is the parent of the node an array?
+ */
 export const parentIsArray = (node: Node) => {
   const parent = node.parents[0]
   return Array.isArray(parent)
