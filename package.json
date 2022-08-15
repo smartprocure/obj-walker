@@ -26,7 +26,10 @@
     "search",
     "json",
     "pointer",
-    "ref"
+    "ref",
+    "flatten",
+    "find",
+    "leaves"
   ],
   "license": "ISC",
   "prettier": {
