@@ -9,7 +9,6 @@ import {
   WalkOptions,
   MapInternal,
   FindNode,
-  FlattenOptions,
   Flatten,
 } from './types'
 import { isObjectOrArray, defShouldSkip, defTraverse, getRoot } from './util'
