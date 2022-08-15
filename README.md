@@ -13,10 +13,9 @@ an object in the same way `JSON.stringify` and `JSON.parse` do. Namely,
 preorder and postorder. To mimic that behavior entirely set the `jsonCompat`
 option to `true`.
 
-Custom traversal functions are supported. This allows you to walk tree-like
-structures, such as JSON schema, in a more efficient and logical way. `map`
-does not work particularly well for this use case since the path to set values
-may be incomplete. Prefer `walkie` in these scenarios instead.
+Custom traversal functions are supported for some functions. This allows you
+to walk tree-like structures, such as a JSON schema, in a more efficient and
+logical way. Prefer `walkie` in these scenarios.
 
 ## walker
 
@@ -24,7 +23,7 @@ may be incomplete. Prefer `walkie` in these scenarios instead.
 walker(obj: object, walkFn: WalkFn, options: Options = {}) => void
 ```
 
-Generic walking fn that traverse an object in preorder (default) or postorder,
+Generic walking fn that traverses an object in preorder (default) or postorder,
 calling `walkFn` for each node. Can be used directly, but probably shouldn't.
 
 ```typescript
@@ -135,18 +134,18 @@ walk(obj).map((x) => x.path)
 
 Produces:
 
-```typescript
-;[
+```json
+[
   [],
-  ['a'],
-  ['a', 'b'],
-  ['a', 'c'],
-  ['d'],
-  ['d', 'e'],
-  ['d', 'f'],
-  ['d', 'f', '0'],
-  ['d', 'f', '1'],
-  ['d', 'f', '2'],
+  ["a"],
+  ["a", "b"],
+  ["a", "c"],
+  ["d"],
+  ["d", "e"],
+  ["d", "f"],
+  ["d", "f", "0"],
+  ["d", "f", "1"],
+  ["d", "f", "2"]
 ]
 ```
 
@@ -205,7 +204,7 @@ const obj = {
 
 const traverse = (x: any) => x.properties || (x.items && { items: x.items })
 const walkFn = ({ val }: Node) => {
-  if (val.hasOwnProperty('additionalProperties')) {
+  if ('additionalProperties' in val) {
     val.additionalProperties = true
   }
 }
@@ -249,9 +248,9 @@ Map over an object modifying values with a fn depth-first in a
 preorder or postorder manner. The output of the mapper fn
 will be traversed if possible when traversing preorder.
 
-By default, nodes will be excluded by returning undefined.
+By default, nodes will be excluded by returning `undefined`.
 Undefined array values will not be excluded. To customize
-pass a fn for options.shouldSkip.
+pass a fn for `options.shouldSkip`.
 
 ```typescript
 map(obj: object, mapper: Mapper, options: MapOptions = {}) => object
@@ -260,7 +259,7 @@ map(obj: object, mapper: Mapper, options: MapOptions = {}) => object
 ```typescript
 export type Mapper = (node: Node) => any
 
-export interface MapOptions extends Options {
+export type MapOptions = Omit<Options, 'traverse'> & {
   shouldSkip?(val: any, node: Node): boolean
 }
 ```
@@ -375,8 +374,8 @@ mapLeaves(obj: object, mapper: Mapper, options?: MapOptions) => object
 ```
 
 Map over the leaves of an object with a fn. By default, nodes will be excluded
-by returning undefined. Undefined array values will not be excluded. To customize
-pass a fn for options.shouldSkip.
+by returning `undefined`. Undefined array values will not be excluded. To customize
+pass a fn for `options.shouldSkip`.
 
 ```typescript
 import { mapLeaves } from 'obj-walker'
@@ -401,6 +400,70 @@ Produces:
   a: { b: 24, c: 25 },
   d: { e: 101, f: [11, 21, 31] },
 }
+```
+
+## findNode
+
+```typescript
+findNode(obj: object, findFn: FindFn, options?: Options) => Node | undefined
+```
+
+Search for a node and short-circuit the tree traversal if it's found.
+
+```typescript
+import { findNode } from 'obj-walker'
+
+const obj = {
+  name: 'Joe',
+  address: {
+    city: 'New York',
+    state: 'NY',
+    zipCode: '10001',
+  },
+  likes: ['Stock Market', 'Running'],
+}
+
+const node = findNode(obj, (node) => {
+  return _.isEqual(node.path, ['address', 'zipCode'])
+})
+```
+
+Produces:
+
+```typescript
+{
+  key: 'zipCode',
+  val: '10001',
+  parents: [
+    { city: 'New York', state: 'NY', zipCode: '10001' },
+    {
+      name: 'Joe',
+      address: { city: 'New York', state: 'NY', zipCode: '10001' },
+      likes: ['Stock Market', 'Running'],
+    },
+  ],
+  path: ['address', 'zipCode'],
+  isLeaf: true,
+  isRoot: false,
+}
+```
+
+## Helper fns
+
+These helper fns are exported for your convenience.
+
+```typescript
+export const isObjectOrArray = _.overSome([_.isPlainObject, _.isArray])
+
+export const defShouldSkip = (val: any, node: Node) =>
+  val === undefined && !parentIsArray(node)
+
+export const parentIsArray = (node: Node) => {
+  const parent = node.parents[0]
+  return Array.isArray(parent)
+}
+
+export const defTraverse = (x: any) => isObjectOrArray(x) && !_.isEmpty(x) && x
 ```
 
 ## addRefs

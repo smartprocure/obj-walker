@@ -8,7 +8,7 @@ export interface WalkOptions extends Options {
   leavesOnly?: boolean
 }
 
-export interface MapOptions extends Options {
+export type MapOptions = Omit<Options, 'traverse'> & {
   shouldSkip?(val: any, node: Node): boolean
 }
 
@@ -25,8 +25,14 @@ export interface Node {
 }
 
 export type WalkFn = (node: Node) => void
+export type FindFn = (node: Node) => boolean
 export type Mapper = (node: Node) => any
 export type Map = (obj: object, mapper: Mapper, options?: MapOptions) => object
+export type FindNode = (
+  obj: object,
+  findFn: FindFn,
+  options?: Options
+) => Node | undefined
 export type MapInternal = (
   obj: object,
   mapper: Mapper,

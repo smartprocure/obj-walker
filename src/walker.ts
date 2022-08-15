@@ -2,32 +2,16 @@ import { set, unset } from 'lodash'
 import _ from 'lodash/fp'
 import {
   WalkFn,
+  FindFn,
   Map,
   Options,
   Node,
   MapOptions,
   WalkOptions,
   MapInternal,
+  FindNode,
 } from './types'
-
-export const isObjectOrArray = _.overSome([_.isPlainObject, _.isArray])
-
-export const parentIsArray = (node: Node) => {
-  const parent = node.parents[0]
-  return Array.isArray(parent)
-}
-
-const getRoot = (obj: object, jsonCompat = false): Node => {
-  const rootCommon = { path: [], isLeaf: false, isRoot: true }
-  return jsonCompat
-    ? { key: '', val: obj, parents: [{ '': obj }], ...rootCommon }
-    : { key: undefined, val: obj, parents: [], ...rootCommon }
-}
-
-const defTraverse = (x: any) => isObjectOrArray(x) && !_.isEmpty(x) && x
-
-const defShouldSkip = (val: any, node: Node) =>
-  val === undefined && !parentIsArray(node)
+import { isObjectOrArray, defShouldSkip, defTraverse, getRoot } from './util'
 
 /**
  * Walk an object depth-first in a preorder (default) or postorder manner.
@@ -69,8 +53,34 @@ export const walker = (obj: object, walkFn: WalkFn, options: Options = {}) => {
   _walk(root)
 }
 
+const FOUND = Symbol('FOUND')
+
+/**
+ * Search for a node and short-circuit the tree traversal if it's found.
+ */
+export const findNode: FindNode = (obj, findFn, options = {}) => {
+  let node: Node | undefined
+  try {
+    walker(
+      obj,
+      (n: Node) => {
+        if (findFn(n)) {
+          node = n
+          throw FOUND
+        }
+      },
+      options
+    )
+  } catch (e) {
+    if (e === FOUND) {
+      return node
+    }
+  }
+}
+
 const mapPre: MapInternal = (obj, mapper, options) => {
-  const { jsonCompat, traverse, shouldSkip } = options
+  const traverse = defTraverse
+  const { jsonCompat, shouldSkip } = options
   // A leaf is a node that can't be traversed
   const isLeaf = _.negate(traverse)
   // Recursively walk object
@@ -122,7 +132,6 @@ const setMapDefaults = (options: MapOptions) => ({
   postOrder: options.postOrder ?? false,
   jsonCompat: options.jsonCompat ?? false,
   shouldSkip: options.shouldSkip ?? defShouldSkip,
-  traverse: options.traverse ?? defTraverse,
 })
 
 /**
@@ -130,9 +139,9 @@ const setMapDefaults = (options: MapOptions) => ({
  * preorder or postorder manner. The output of the mapper fn
  * will be traversed if possible when traversing preorder.
  *
- * By default, nodes will be excluded by returning undefined.
+ * By default, nodes will be excluded by returning `undefined`.
  * Undefined array values will not be excluded. To customize
- * pass a fn for options.shouldSkip.
+ * pass a fn for `options.shouldSkip`.
  */
 export const map: Map = (obj, mapper, options = {}) => {
   if (!isObjectOrArray(obj)) {
@@ -182,8 +191,8 @@ export const walkie = (obj: object, walkFn: WalkFn, options?: WalkOptions) => {
 
 /**
  * Map over the leaves of an object with a fn. By default, nodes will be excluded
- * by returning undefined. Undefined array values will not be excluded. To customize
- * pass a fn for options.shouldSkip.
+ * by returning `undefined`. Undefined array values will not be excluded. To customize
+ * pass a fn for `options.shouldSkip`.
  */
 export const mapLeaves: Map = (obj, mapper, options = {}) => {
   if (!isObjectOrArray(obj)) {

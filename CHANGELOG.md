@@ -1,3 +1,7 @@
+# 1.0.0
+
+* Remove `traverse` option from all mapping fns. 
+
 # 0.0.9
 
 * Custom `shouldSkip` fn for `map` and `mapLeaves`.

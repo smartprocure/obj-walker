@@ -1,6 +1,7 @@
 import _ from 'lodash/fp'
 import { describe, expect, test } from '@jest/globals'
-import { walker, walk, walkie, map, mapLeaves, parentIsArray } from './walker'
+import { walker, walk, walkie, map, mapLeaves, findNode } from './walker'
+import { parentIsArray } from './util'
 import { Node } from './types'
 
 describe('walker', () => {
@@ -486,6 +487,45 @@ describe('walk', () => {
   })
 })
 
+describe('findNode', () => {
+  const obj = {
+    name: 'Joe',
+    address: {
+      city: 'New York',
+      state: 'NY',
+      zipCode: '10001',
+    },
+    likes: ['Stock Market', 'Running'],
+  }
+  test('should find a node and short-circuit', () => {
+    let numNodesVisited = 0
+    const node = findNode(obj, (node) => {
+      numNodesVisited++
+      return _.isEqual(node.path, ['address', 'zipCode'])
+    })
+    expect(node).toEqual({
+      key: 'zipCode',
+      val: '10001',
+      parents: [
+        { city: 'New York', state: 'NY', zipCode: '10001' },
+        {
+          name: 'Joe',
+          address: { city: 'New York', state: 'NY', zipCode: '10001' },
+          likes: ['Stock Market', 'Running'],
+        },
+      ],
+      path: ['address', 'zipCode'],
+      isLeaf: true,
+      isRoot: false,
+    })
+    expect(numNodesVisited).toBe(6)
+  })
+  test('should return undefined if not found', () => {
+    const node = findNode(obj, (node) => node.key === 'countryCode')
+    expect(node).toBeUndefined()
+  })
+})
+
 describe('walkie', () => {
   test('mutate a tree', () => {
     const obj = {
@@ -519,7 +559,7 @@ describe('walkie', () => {
 
     const traverse = (x: any) => x.properties || (x.items && { items: x.items })
     const walkFn = ({ val }: Node) => {
-      if (val.hasOwnProperty('additionalProperties')) {
+      if ('additionalProperties' in val) {
         val.additionalProperties = true
       }
     }
@@ -683,36 +723,6 @@ describe('mapLeaves', () => {
     expect(result).toEqual({
       a: { b: 24, c: 25 },
       d: { e: 101, f: [11, 21, 31] },
-    })
-  })
-  test('should remove nulls from leaves', () => {
-    const obj = {
-      a: {
-        b: 23,
-        c: 24,
-      },
-      d: {
-        e: null,
-        f: [10, null, 30],
-      },
-    }
-    const result = mapLeaves(
-      obj,
-      ({ val }) => {
-        if (Array.isArray(val)) return _.compact(val)
-        if (val !== null) return val
-      },
-      { traverse: (x: any) => _.isPlainObject(x) && x }
-    )
-    expect(obj).toEqual(obj)
-    expect(result).toEqual({
-      a: {
-        b: 23,
-        c: 24,
-      },
-      d: {
-        f: [10, 30],
-      },
     })
   })
 })
