@@ -10,8 +10,24 @@ import {
   MapInternal,
   FindNode,
   Flatten,
+  NextNode,
 } from './types'
 import { isObjectOrArray, defShouldSkip, defTraverse, getRoot } from './util'
+
+const nextNode: NextNode = (currentNode, entry, isLeaf) => {
+  const [key, val] = entry
+  const { val: currentVal, parents, path } = currentNode
+  const nodeParents = [currentVal, ...parents]
+  const nodePath = [...path, key]
+  return {
+    key,
+    val,
+    parents: nodeParents,
+    path: nodePath,
+    isLeaf: isLeaf(val),
+    isRoot: false,
+  }
+}
 
 /**
  * Walk an object depth-first in a preorder (default) or postorder manner.
@@ -28,20 +44,10 @@ export const walker = (obj: object, walkFn: WalkFn, options: Options = {}) => {
     if (!postOrder) {
       walkFn(node)
     }
-    const { val: tree, parents, path } = node
-    const next = traverse(tree) || []
-    for (const [key, val] of Object.entries(next)) {
-      const nodeParents = [tree, ...parents]
-      const nodePath = [...path, key]
-      const node = {
-        key,
-        val,
-        parents: nodeParents,
-        path: nodePath,
-        isLeaf: isLeaf(val),
-        isRoot: false,
-      }
-      _walk(node)
+    const { val } = node
+    const next = traverse(val) || []
+    for (const entry of Object.entries(next)) {
+      _walk(nextNode(node, entry, isLeaf))
     }
     // Postorder
     if (postOrder) {
@@ -49,8 +55,7 @@ export const walker = (obj: object, walkFn: WalkFn, options: Options = {}) => {
     }
   }
 
-  const root = getRoot(obj, jsonCompat)
-  _walk(root)
+  _walk(getRoot(obj, jsonCompat))
 }
 
 const FOUND = Symbol('FOUND')
@@ -86,7 +91,7 @@ const mapPre: MapInternal = (obj, mapper, options) => {
   const isLeaf = _.negate(traverse)
   // Recursively walk object
   const _walk = (node: Node): void => {
-    const { parents, path } = node
+    const { path } = node
     const newVal = mapper(node)
     // Should skip value
     if (shouldSkip(newVal, node)) {
@@ -95,22 +100,11 @@ const mapPre: MapInternal = (obj, mapper, options) => {
     }
     set(obj, path, newVal)
     const next = traverse(newVal) || []
-    for (const [key, val] of Object.entries(next)) {
-      const nodeParents = [newVal, ...parents]
-      const nodePath = [...path, key]
-      const node = {
-        key,
-        val,
-        parents: nodeParents,
-        path: nodePath,
-        isLeaf: isLeaf(val),
-        isRoot: false,
-      }
-      _walk(node)
+    for (const entry of Object.entries(next)) {
+      _walk(nextNode(node, entry, isLeaf))
     }
   }
-  const root = getRoot(obj, jsonCompat)
-  _walk(root)
+  _walk(getRoot(obj, jsonCompat))
 }
 
 const mapPost: MapInternal = (obj, mapper, options) =>

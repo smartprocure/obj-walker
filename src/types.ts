@@ -47,3 +47,9 @@ export type Flatten = (
   obj: object,
   options?: WalkOptions & FlattenOptions
 ) => Record<string, any>
+
+export type NextNode = (
+  currentNode: Node,
+  entry: [string, any],
+  isLeaf: (x: any) => boolean
+) => Node

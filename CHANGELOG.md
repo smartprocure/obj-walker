@@ -1,3 +1,7 @@
+# 1.1.0
+
+* Factor out common code.
+
 # 1.0.0
 
 * Remove `traverse` option from all mapping fns. 
