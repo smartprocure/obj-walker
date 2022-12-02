@@ -1,3 +1,7 @@
+# 1.1.1
+
+* Apply mapping fn to the root node for preorder and postorder `map`.
+
 # 1.1.0
 
 * Factor out common code.

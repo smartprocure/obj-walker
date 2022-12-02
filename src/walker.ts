@@ -85,43 +85,56 @@ export const findNode: FindNode = (obj, findFn, options = {}) => {
 }
 
 const mapPre: MapInternal = (obj, mapper, options) => {
+  let result = _.cloneDeep(obj)
   const traverse = defTraverse
   const { jsonCompat, shouldSkip } = options
   // A leaf is a node that can't be traversed
   const isLeaf = _.negate(traverse)
   // Recursively walk object
   const _walk = (node: Node): void => {
-    const { path } = node
+    const { isRoot, path } = node
     const newVal = mapper(node)
     // Should skip value
     if (shouldSkip(newVal, node)) {
-      unset(obj, path)
+      unset(result, path)
       return
     }
-    set(obj, path, newVal)
+    if (isRoot) {
+      result = newVal
+    } else {
+      set(result, path, newVal)
+    }
     const next = traverse(newVal) || []
     for (const entry of Object.entries(next)) {
       _walk(nextNode(node, entry, isLeaf))
     }
   }
-  _walk(getRoot(obj, jsonCompat))
+  _walk(getRoot(result, jsonCompat))
+  return result
 }
 
-const mapPost: MapInternal = (obj, mapper, options) =>
+const mapPost: MapInternal = (obj, mapper, options) => {
+  let result = _.cloneDeep(obj)
   walker(
-    obj,
+    result,
     (node) => {
-      const { path } = node
+      const { isRoot, path } = node
       const newVal = mapper(node)
       // Should skip value
       if (options.shouldSkip(newVal, node)) {
-        unset(obj, path)
+        unset(result, path)
         return
       }
-      set(obj, path, newVal)
+      if (isRoot) {
+        result = newVal
+      } else {
+        set(result, path, newVal)
+      }
     },
     { ...options, postOrder: true }
   )
+  return result
+}
 
 const setMapDefaults = (options: MapOptions) => ({
   postOrder: options.postOrder ?? false,
@@ -143,14 +156,10 @@ export const map: Map = (obj, mapper, options = {}) => {
     return obj
   }
   const opts = setMapDefaults(options)
-  const result = _.cloneDeep(obj)
   if (options.postOrder) {
-    mapPost(result, mapper, opts)
-  } else {
-    mapPre(result, mapper, opts)
+    return mapPost(obj, mapper, opts)
   }
-
-  return result
+  return mapPre(obj, mapper, opts)
 }
 
 /**
