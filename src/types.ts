@@ -37,7 +37,7 @@ export type MapInternal = (
   obj: object,
   mapper: Mapper,
   options: Required<MapOptions>
-) => void
+) => object
 
 export interface FlattenOptions {
   separator?: string
