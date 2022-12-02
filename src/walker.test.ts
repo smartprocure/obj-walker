@@ -612,7 +612,7 @@ describe('walkie', () => {
 })
 
 describe('map', () => {
-  test('remove empty elements from an array', () => {
+  test('preorder', () => {
     const obj = {
       a: {
         b: 23,
@@ -636,7 +636,72 @@ describe('map', () => {
       i: 'Frank',
     })
   })
-  test('map postorder', () => {
+  test('preorder - top-level mapping', () => {
+    const obj = {
+      bsonType: 'object',
+      additionalProperties: false,
+      required: ['name'],
+      properties: {
+        _id: {
+          bsonType: 'objectId',
+        },
+        name: { bsonType: 'string' },
+        addresses: {
+          bsonType: 'array',
+          items: {
+            bsonType: 'object',
+            additionalProperties: false,
+            properties: {
+              address: {
+                bsonType: 'object',
+                additionalProperties: false,
+                properties: {
+                  zip: { bsonType: 'string' },
+                  country: { bsonType: 'string' },
+                },
+              },
+            },
+          },
+        },
+      },
+    }
+    const convertSchemaNode = (obj: Record<string, any>) => {
+      return {
+        ..._.pick(['properties'], obj),
+        ...(obj.bsonType !== 'object' && { type: obj.bsonType }),
+      }
+    }
+    const mapper = (node: Node) => {
+      const { key, val, parents } = node
+      // Ignore top-level _id field
+      if (key === '_id' && parents.length === 2) {
+        return
+      }
+      if (val?.bsonType) {
+        if (val.bsonType === 'array') {
+          return convertSchemaNode(val.items)
+        }
+        return convertSchemaNode(val)
+      }
+      return val
+    }
+    expect(map(obj, mapper)).toEqual({
+      properties: {
+        name: { type: 'string' },
+        addresses: {
+          properties: {
+            address: {
+              properties: {
+                zip: { type: 'string' },
+                country: { type: 'string' },
+              },
+            },
+          },
+        },
+      },
+    })
+  })
+  test('postorder', () => {
     const obj = {
       bob: {
         scores: ['87', 'x97', 95, false],
@@ -664,6 +729,20 @@ describe('map', () => {
       joe: { scores: [92, 92.5, 73.2] },
       frank: { scores: [] },
     })
+  })
+  test('postorder - top-level mapping', () => {
+    const obj = ['87', 95, 'foo']
+    const result = map(
+      obj,
+      ({ val, isLeaf }) => {
+        if (isLeaf) {
+          return parseFloat(val)
+        }
+        return Array.isArray(val) ? _.compact(val) : val
+      },
+      { postOrder: true }
+    )
+    expect(result).toEqual([87, 95])
   })
   test('custom shouldSkip fn', () => {
     const obj = {

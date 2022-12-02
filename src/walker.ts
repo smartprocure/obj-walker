@@ -114,18 +114,22 @@ const mapPre: MapInternal = (obj, mapper, options) => {
 }
 
 const mapPost: MapInternal = (obj, mapper, options) => {
-  const result = _.cloneDeep(obj)
+  let result = _.cloneDeep(obj)
   walker(
     result,
     (node) => {
-      const { path } = node
+      const { isRoot, path } = node
       const newVal = mapper(node)
       // Should skip value
       if (options.shouldSkip(newVal, node)) {
         unset(result, path)
         return
       }
-      set(result, path, newVal)
+      if (isRoot) {
+        result = newVal
+      } else {
+        set(result, path, newVal)
+      }
     },
     { ...options, postOrder: true }
   )
