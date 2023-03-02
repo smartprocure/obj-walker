@@ -53,3 +53,16 @@ export type NextNode = (
   entry: [string, any],
   isLeaf: (x: any) => boolean
 ) => Node
+
+export interface CompactOptions {
+  removeUndefined?: boolean
+  removeNull?: boolean
+  removeEmptyString?: boolean
+  removeFalse?: boolean
+  removeNaN?: boolean
+  removeEmptyObject?: boolean
+  removeEmptyArray?: boolean
+  compactArrays?: boolean
+}
+
+export type Compact = (obj: object, options?: CompactOptions) => object

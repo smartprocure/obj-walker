@@ -1,6 +1,7 @@
 import { set, unset } from 'lodash'
 import _ from 'lodash/fp'
 import {
+  Compact,
   WalkFn,
   Map,
   Options,
@@ -11,8 +12,15 @@ import {
   FindNode,
   Flatten,
   NextNode,
+  CompactOptions,
 } from './types'
-import { isObjectOrArray, defShouldSkip, defTraverse, getRoot } from './util'
+import {
+  isObjectOrArray,
+  defShouldSkip,
+  defTraverse,
+  getRoot,
+  parentIsArray,
+} from './util'
 
 const nextNode: NextNode = (currentNode, entry, isLeaf) => {
   const [key, val] = entry
@@ -160,6 +168,51 @@ export const map: Map = (obj, mapper, options = {}) => {
     return mapPost(obj, mapper, opts)
   }
   return mapPre(obj, mapper, opts)
+}
+
+const buildCompactFilter = (options: CompactOptions) => {
+  const fns: ((x: any) => boolean)[] = []
+
+  if (options.removeUndefined) {
+    fns.push(_.isUndefined)
+  }
+  if (options.removeNull) {
+    fns.push(_.isNull)
+  }
+  if (options.removeEmptyString) {
+    fns.push((x: any) => x === '')
+  }
+  if (options.removeFalse) {
+    fns.push((x: any) => x === false)
+  }
+  if (options.removeNaN) {
+    fns.push(_.isNaN)
+  }
+  if (options.removeEmptyObject) {
+    fns.push(_.overEvery([_.isPlainObject, _.isEmpty]))
+  }
+  if (options.removeEmptyArray) {
+    fns.push(_.overEvery([_.isArray, _.isEmpty]))
+  }
+  return _.overSome(fns)
+}
+
+/**
+ * Compact objects and arrays with granular control over what
+ * gets removed.
+ */
+export const compact: Compact = (obj, options = {}) => {
+  const remove = buildCompactFilter(options)
+  const mapper = (node: Node) => {
+    let { val } = node
+    if (options.compactArrays && Array.isArray(val)) {
+      val = _.remove(remove, val)
+    }
+    if (parentIsArray(node) || !remove(val)) {
+      return val
+    }
+  }
+  return map(obj, mapper, { postOrder: true })
 }
 
 /**

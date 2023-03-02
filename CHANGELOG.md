@@ -1,3 +1,7 @@
+# 1.2.0
+
+* Added `compact` for cleaning up objects/arrays.
+
 # 1.1.1
 
 * Apply mapping fn to the root node for preorder and postorder `map`.

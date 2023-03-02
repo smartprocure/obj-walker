@@ -8,6 +8,7 @@ import {
   map,
   mapLeaves,
   findNode,
+  compact,
 } from './walker'
 import { parentIsArray } from './util'
 import { Node } from './types'
@@ -919,6 +920,156 @@ describe('flatten', () => {
       addresses_items_isPrimary: { bsonType: 'bool' },
       integrations_stripe_priceId: { bsonType: 'string' },
       integrations_stripe_subscriptionStatus: { bsonType: 'string' },
+    })
+  })
+})
+
+describe('compact', () => {
+  test('should remove undefined', () => {
+    const obj = {
+      a: {
+        b: undefined,
+      },
+      c: undefined,
+      d: 42,
+      e: [undefined],
+    }
+    const result = compact(obj, { removeUndefined: true })
+    expect(result).toEqual({ a: {}, d: 42, e: [undefined] })
+  })
+  test('should remove null', () => {
+    const obj = {
+      a: {
+        b: null,
+      },
+      c: null,
+      d: 42,
+      e: [null],
+    }
+    const result = compact(obj, { removeNull: true })
+    expect(result).toEqual({ a: {}, d: 42, e: [null] })
+  })
+  test('should remove empty string', () => {
+    const obj = {
+      a: {
+        b: '',
+      },
+      c: '',
+      d: 42,
+      e: [''],
+    }
+    const result = compact(obj, { removeEmptyString: true })
+    expect(result).toEqual({ a: {}, d: 42, e: [''] })
+  })
+  test('should remove false', () => {
+    const obj = {
+      a: {
+        b: false,
+      },
+      c: false,
+      d: 42,
+      e: [false],
+    }
+    const result = compact(obj, { removeFalse: true })
+    expect(result).toEqual({ a: {}, d: 42, e: [false] })
+  })
+  test('should remove NaN', () => {
+    const obj = {
+      a: {
+        b: NaN,
+      },
+      c: NaN,
+      d: 42,
+      e: [NaN],
+    }
+    const result = compact(obj, { removeNaN: true })
+    expect(result).toEqual({ a: {}, d: 42, e: [NaN] })
+  })
+  test('should remove empty object', () => {
+    const obj = {
+      a: {
+        b: {},
+      },
+      c: {},
+      d: 42,
+    }
+    const result = compact(obj, { removeEmptyObject: true })
+    expect(result).toEqual({ d: 42 })
+  })
+  test('should remove empty array', () => {
+    const obj = {
+      a: {
+        b: [],
+      },
+      c: [],
+      d: 42,
+    }
+    const result = compact(obj, { removeEmptyArray: true })
+    expect(result).toEqual({ a: {}, d: 42 })
+  })
+  test('should compact arrays', () => {
+    const obj = {
+      a: {
+        b: [null, null],
+      },
+      c: [],
+      d: [42, null],
+    }
+    const result = compact(obj, { removeNull: true, compactArrays: true })
+    expect(result).toEqual({ a: { b: [] }, c: [], d: [42] })
+  })
+  test('should compact and remove empty arrays', () => {
+    const obj = {
+      a: {
+        b: [null, null],
+      },
+      c: [],
+      d: [42, null],
+    }
+    const result = compact(obj, {
+      removeNull: true,
+      compactArrays: true,
+      removeEmptyArray: true,
+    })
+    expect(result).toEqual({ a: {}, d: [42] })
+  })
+  test('should compact top-level array', () => {
+    const arr = ['', 2, null, 3, {}, 4, [[undefined]], 5]
+    const result = compact(arr, {
+      removeUndefined: true,
+      removeEmptyString: true,
+      removeNull: true,
+      removeEmptyObject: true,
+      removeEmptyArray: true,
+      compactArrays: true,
+    })
+    expect(result).toEqual([2, 3, 4, 5])
+  })
+  test('should compact all the things', () => {
+    const obj = {
+      a: {
+        b: [null, null, 21, '', { b1: null }, { b2: 26 }],
+      },
+      c: [],
+      d: [42, null],
+      e: {
+        f: {
+          g: '',
+          h: undefined,
+        },
+      },
+    }
+    const result = compact(obj, {
+      removeUndefined: true,
+      removeEmptyString: true,
+      removeNull: true,
+      compactArrays: true,
+      removeEmptyArray: true,
+      removeEmptyObject: true,
+    })
+    expect(result).toEqual({
+      a: { b: [21, { b2: 26 }] },
+      d: [42],
     })
   })
 })
