@@ -1013,10 +1013,10 @@ describe('compact', () => {
         b: [null, null],
       },
       c: [],
-      d: [42, null],
+      d: [42, null, ''],
     }
     const result = compact(obj, { removeNull: true, compactArrays: true })
-    expect(result).toEqual({ a: { b: [] }, c: [], d: [42] })
+    expect(result).toEqual({ a: { b: [] }, c: [], d: [42, ''] })
   })
   test('should compact and remove empty arrays', () => {
     const obj = {

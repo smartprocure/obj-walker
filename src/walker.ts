@@ -198,10 +198,11 @@ const buildCompactFilter = (options: CompactOptions) => {
 }
 
 /**
- * Compact objects and arrays with granular control over what
- * gets removed.
+ * Compact an object, removing fields recursively according to the supplied options.
+ * All option flags are `false` by default. If `compactArrays` is set to `true` arrays
+ * will be compacted based on the enabled remove option flags.
  */
-export const compact: Compact = (obj, options = {}) => {
+export const compact: Compact = (obj, options) => {
   const remove = buildCompactFilter(options)
   const mapper = (node: Node) => {
     let { val } = node

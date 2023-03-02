@@ -1,3 +1,7 @@
+# 1.3.0
+
+* Make `options` required for `compact`.
+
 # 1.2.0
 
 * Added `compact` for cleaning up objects/arrays.

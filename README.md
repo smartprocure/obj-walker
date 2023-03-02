@@ -489,7 +489,7 @@ Produces:
 ## compact
 
 ```typescript
-compact(obj: object, options?: CompactOptions) => object
+compact(obj: object, options: CompactOptions) => object
 ```
 
 ```typescript
@@ -506,7 +506,8 @@ interface CompactOptions {
 ```
 
 Compact an object, removing fields recursively according to the supplied options.
-All option flags are `false` by default.
+All option flags are `false` by default. If `compactArrays` is set to `true` arrays
+will be compacted based on the enabled remove option flags.
 
 ```typescript
 const obj = {

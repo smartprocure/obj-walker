@@ -65,4 +65,4 @@ export interface CompactOptions {
   compactArrays?: boolean
 }
 
-export type Compact = (obj: object, options?: CompactOptions) => object
+export type Compact = (obj: object, options: CompactOptions) => object
