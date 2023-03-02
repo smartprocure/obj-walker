@@ -28,18 +28,18 @@ calling `walkFn` for each node. Can be used directly, but probably shouldn't.
 
 ```typescript
 export interface Node {
-  key: string | undefined
-  val: any
-  parents: any[]
-  path: string[]
-  isLeaf: boolean
-  isRoot: boolean
+    key: string | undefined
+    val: any
+    parents: any[]
+    path: string[]
+    isLeaf: boolean
+    isRoot: boolean
 }
 
 export interface Options {
-  postOrder?: boolean
-  jsonCompat?: boolean
-  traverse?(x: any): any
+    postOrder?: boolean
+    jsonCompat?: boolean
+    traverse?(x: any): any
 }
 ```
 
@@ -47,19 +47,19 @@ export interface Options {
 import { walker } from 'obj-walker'
 
 const obj = {
-  a: {
-    b: 23,
-    c: 24,
-  },
-  d: {
-    e: 'Bob',
-    f: [10, 20, 30],
-  },
+    a: {
+        b: 23,
+        c: 24,
+    },
+    d: {
+        e: 'Bob',
+        f: [10, 20, 30],
+    },
 }
 
 const nodes: Node[] = []
 const walkFn = (node: Node) => {
-  nodes.push(node)
+    nodes.push(node)
 }
 walker(obj, walkFn, options)
 nodes
@@ -112,7 +112,7 @@ preorder or postorder.
 
 ```typescript
 export interface WalkOptions extends Options {
-  leavesOnly?: boolean
+    leavesOnly?: boolean
 }
 ```
 
@@ -120,14 +120,14 @@ export interface WalkOptions extends Options {
 import { walk } from 'obj-walker'
 
 const obj = {
-  a: {
-    b: 23,
-    c: 24,
-  },
-  d: {
-    e: 'Bob',
-    f: [10, 20, 30],
-  },
+    a: {
+        b: 23,
+        c: 24,
+    },
+    d: {
+        e: 'Bob',
+        f: [10, 20, 30],
+    },
 }
 walk(obj).map((x) => x.path)
 ```
@@ -136,16 +136,16 @@ Produces:
 
 ```json
 [
-  [],
-  ["a"],
-  ["a", "b"],
-  ["a", "c"],
-  ["d"],
-  ["d", "e"],
-  ["d", "f"],
-  ["d", "f", "0"],
-  ["d", "f", "1"],
-  ["d", "f", "2"]
+    [],
+    ["a"],
+    ["a", "b"],
+    ["a", "c"],
+    ["d"],
+    ["d", "e"],
+    ["d", "f"],
+    ["d", "f", "0"],
+    ["d", "f", "1"],
+    ["d", "f", "2"]
 ]
 ```
 
@@ -174,39 +174,39 @@ The original object is not modified.
 import { walkie } from 'obj-walker'
 
 const obj = {
-  bsonType: 'object',
-  additionalProperties: false,
-  required: ['name'],
-  properties: {
-    _id: {
-      bsonType: 'objectId',
-    },
-    name: { bsonType: 'string' },
-    addresses: {
-      bsonType: 'array',
-      items: {
-        bsonType: 'object',
-        additionalProperties: false,
-        properties: {
-          address: {
-            bsonType: 'object',
-            additionalProperties: false,
-            properties: {
-              zip: { bsonType: 'string' },
-              country: { bsonType: 'string' },
-            },
-          },
+    bsonType: 'object',
+    additionalProperties: false,
+    required: ['name'],
+    properties: {
+        _id: {
+            bsonType: 'objectId',
         },
-      },
+        name: { bsonType: 'string' },
+        addresses: {
+            bsonType: 'array',
+            items: {
+                bsonType: 'object',
+                additionalProperties: false,
+                properties: {
+                    address: {
+                        bsonType: 'object',
+                        additionalProperties: false,
+                        properties: {
+                            zip: { bsonType: 'string' },
+                            country: { bsonType: 'string' },
+                        },
+                    },
+                },
+            },
+        },
     },
-  },
 }
 
 const traverse = (x: any) => x.properties || (x.items && { items: x.items })
 const walkFn = ({ val }: Node) => {
-  if ('additionalProperties' in val) {
-    val.additionalProperties = true
-  }
+    if ('additionalProperties' in val) {
+        val.additionalProperties = true
+    }
 }
 walkie(obj, walkFn, { traverse })
 ```
@@ -260,7 +260,7 @@ map(obj: object, mapper: Mapper, options: MapOptions = {}) => object
 export type Mapper = (node: Node) => any
 
 export type MapOptions = Omit<Options, 'traverse'> & {
-  shouldSkip?(val: any, node: Node): boolean
+    shouldSkip?(val: any, node: Node): boolean
 }
 ```
 
@@ -268,16 +268,16 @@ export type MapOptions = Omit<Options, 'traverse'> & {
 import { map } from 'obj-walker'
 
 const obj = {
-  a: {
-    b: 23,
-    c: 24,
-  },
-  d: {
-    e: 'Bob',
-    f: [10, null, 30, [31, undefined, 32], 40],
-  },
-  g: [25, '', { h: [null, 26, 27] }],
-  i: 'Frank',
+    a: {
+        b: 23,
+        c: 24,
+    },
+    d: {
+        e: 'Bob',
+        f: [10, null, 30, [31, undefined, 32], 40],
+    },
+    g: [25, '', { h: [null, 26, 27] }],
+    i: 'Frank',
 }
 map(obj, ({ val }) => (Array.isArray(val) ? _.compact(val) : val))
 ```
@@ -297,25 +297,25 @@ Postorder
 
 ```typescript
 const obj = {
-  bob: {
-    scores: ['87', 'x97', 95, false],
-  },
-  joe: {
-    scores: [92, 92.5, '73.2', ''],
-  },
-  frank: {
-    scores: ['abc', ''],
-  },
+    bob: {
+        scores: ['87', 'x97', 95, false],
+    },
+    joe: {
+        scores: [92, 92.5, '73.2', ''],
+    },
+    frank: {
+        scores: ['abc', ''],
+    },
 }
 const result = map(
-  obj,
-  ({ val, isLeaf }) => {
-    if (isLeaf) {
-      return parseFloat(val)
-    }
-    return Array.isArray(val) ? _.compact(val) : val
-  },
-  { postOrder: true }
+    obj,
+    ({ val, isLeaf }) => {
+        if (isLeaf) {
+            return parseFloat(val)
+        }
+        return Array.isArray(val) ? _.compact(val) : val
+    },
+    { postOrder: true }
 )
 ```
 
@@ -333,28 +333,28 @@ Custom `shouldSkip` fn
 
 ```typescript
 const obj = {
-  bob: {
-    scores: ['87', 'x97', 95, false],
-  },
-  joe: {
-    scores: [92, 92.5, '73.2', ''],
-  },
-  frank: {
-    scores: ['abc', ''],
-  },
+    bob: {
+        scores: ['87', 'x97', 95, false],
+    },
+    joe: {
+        scores: [92, 92.5, '73.2', ''],
+    },
+    frank: {
+        scores: ['abc', ''],
+    },
 }
 
 const shouldSkip = (val: any, node: Node) =>
-  _.isEmpty(val) && !parentIsArray(node)
+    _.isEmpty(val) && !parentIsArray(node)
 const result = map(
-  obj,
-  ({ val, isLeaf }) => {
-    if (isLeaf) {
-      return parseFloat(val)
-    }
-    return Array.isArray(val) ? _.compact(val) : val
-  },
-  { postOrder: true, shouldSkip }
+    obj,
+    ({ val, isLeaf }) => {
+        if (isLeaf) {
+            return parseFloat(val)
+        }
+        return Array.isArray(val) ? _.compact(val) : val
+    },
+    { postOrder: true, shouldSkip }
 )
 ```
 
@@ -381,14 +381,14 @@ pass a fn for `options.shouldSkip`.
 import { mapLeaves } from 'obj-walker'
 
 const obj = {
-  a: {
-    b: 23,
-    c: 24,
-  },
-  d: {
-    e: 100,
-    f: [10, 20, 30],
-  },
+    a: {
+        b: 23,
+        c: 24,
+    },
+    d: {
+        e: 100,
+        f: [10, 20, 30],
+    },
 }
 mapLeaves(obj, ({ val }) => val + 1)
 ```
@@ -414,17 +414,17 @@ Search for a node and short-circuit the tree traversal if it's found.
 import { findNode } from 'obj-walker'
 
 const obj = {
-  name: 'Joe',
-  address: {
-    city: 'New York',
-    state: 'NY',
-    zipCode: '10001',
-  },
-  likes: ['Stock Market', 'Running'],
+    name: 'Joe',
+    address: {
+        city: 'New York',
+        state: 'NY',
+        zipCode: '10001',
+    },
+    likes: ['Stock Market', 'Running'],
 }
 
 findNode(obj, (node) => {
-  return _.isEqual(node.path, ['address', 'zipCode'])
+    return _.isEqual(node.path, ['address', 'zipCode'])
 })
 ```
 
@@ -461,14 +461,14 @@ what character to join keys with. Defaults to '.'.
 import { flatten } from 'obj-walker'
 
 const obj = {
-  a: {
-    b: 23,
-    c: 24,
-  },
-  d: {
-    e: 100,
-    f: [10, 20, 30],
-  },
+    a: {
+        b: 23,
+        c: 24,
+    },
+    d: {
+        e: 100,
+        f: [10, 20, 30],
+    },
 }
 flatten(obj)
 ```
@@ -486,6 +486,61 @@ Produces:
 }
 ```
 
+## compact
+
+```typescript
+compact(obj: object, options?: CompactOptions) => object
+```
+
+```typescript
+interface CompactOptions {
+    removeUndefined?: boolean
+    removeNull?: boolean
+    removeEmptyString?: boolean
+    removeFalse?: boolean
+    removeNaN?: boolean
+    removeEmptyObject?: boolean
+    removeEmptyArray?: boolean
+    compactArrays?: boolean
+}
+```
+
+Compact an object, removing fields recursively according to the supplied options.
+All option flags are `false` by default.
+
+```typescript
+const obj = {
+    a: {
+        b: [null, null, 21, '', { b1: null }, { b2: 26 }],
+    },
+    c: [],
+    d: [42, null],
+    e: {
+        f: {
+            g: '',
+            h: undefined,
+        },
+    },
+}
+const result = compact(obj, {
+    removeUndefined: true,
+    removeEmptyString: true,
+    removeNull: true,
+    compactArrays: true,
+    removeEmptyArray: true,
+    removeEmptyObject: true,
+})
+```
+
+Produces:
+
+```typescript
+{
+  a: { b: [21, { b2: 26 }] },
+  d: [42],
+}
+```
+
 ## Helper fns
 
 These helper fns are exported for your convenience.
@@ -494,11 +549,11 @@ These helper fns are exported for your convenience.
 export const isObjectOrArray = _.overSome([_.isPlainObject, _.isArray])
 
 export const defShouldSkip = (val: any, node: Node) =>
-  val === undefined && !parentIsArray(node)
+    val === undefined && !parentIsArray(node)
 
 export const parentIsArray = (node: Node) => {
-  const parent = node.parents[0]
-  return Array.isArray(parent)
+    const parent = node.parents[0]
+    return Array.isArray(parent)
 }
 
 export const defTraverse = (x: any) => isObjectOrArray(x) && !_.isEmpty(x) && x
@@ -517,29 +572,29 @@ object seen.
 import { addRefs } from 'obj-walker'
 
 const apiOutput = {
-  1: 'foo',
-  2: 'bar',
-  3: 'baz',
+    1: 'foo',
+    2: 'bar',
+    3: 'baz',
 }
 
 const detailsOutput = {
-  1: 'bla',
-  2: 'bla',
-  3: 'bla',
+    1: 'bla',
+    2: 'bla',
+    3: 'bla',
 }
 
 const obj = {
-  api: {
-    input: [1, 2, 3],
-    output: apiOutput,
-  },
-  details: {
-    input: apiOutput,
-    output: detailsOutput,
-  },
-  writeToDB: {
-    input: detailsOutput,
-  },
+    api: {
+        input: [1, 2, 3],
+        output: apiOutput,
+    },
+    details: {
+        input: apiOutput,
+        output: detailsOutput,
+    },
+    writeToDB: {
+        input: detailsOutput,
+    },
 }
 addRefs(obj)
 ```
@@ -572,15 +627,15 @@ Rehydrate objects by replacing refs with actual objects.
 import { deref } from 'obj-walker'
 
 const obj = {
-  api: {
-    input: [1, 2, 3],
-    output: { '1': 'foo', '2': 'bar', '3': 'baz' },
-  },
-  details: {
-    input: { $ref: '#/api/output' },
-    output: { '1': 'bla', '2': 'bla', '3': 'bla' },
-  },
-  writeToDB: { input: { $ref: '#/details/output' } },
+    api: {
+        input: [1, 2, 3],
+        output: { '1': 'foo', '2': 'bar', '3': 'baz' },
+    },
+    details: {
+        input: { $ref: '#/api/output' },
+        output: { '1': 'bla', '2': 'bla', '3': 'bla' },
+    },
+    writeToDB: { input: { $ref: '#/details/output' } },
 }
 deref(obj)
 ```
