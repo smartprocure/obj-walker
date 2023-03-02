@@ -30,7 +30,8 @@
     "flatten",
     "find",
     "leaves",
-    "traverse"
+    "traverse",
+    "compact"
   ],
   "license": "ISC",
   "prettier": {
