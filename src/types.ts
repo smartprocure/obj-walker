@@ -68,8 +68,8 @@ export interface CompactOptions {
 export type Compact = (obj: object, options: CompactOptions) => object
 
 export interface TruncateOptions {
-  depth: number
-  replaceWith?: string
+  maxDepth: number
+  replaceWith?: any
 }
 
 export type Truncate = (obj: object, options: TruncateOptions) => object

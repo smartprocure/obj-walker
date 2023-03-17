@@ -1,3 +1,7 @@
+# 1.5.0
+
+* Changed `truncate` options from `depth` to `maxDepth` and allow `replaceWith` to be anything.
+
 # 1.4.0
 
 * Added `truncate` for truncating deep objects.

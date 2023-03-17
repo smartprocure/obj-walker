@@ -550,8 +550,8 @@ truncate(obj: object, options: TruncateOptions) => object
 
 ```typescript
 interface TruncateOptions {
-    depth: number
-    replaceWith?: string
+    maxDepth: number
+    replaceWith?: any
 }
 ```
 
@@ -570,7 +570,7 @@ const obj = {
     },
     f: 42,
 }
-truncate(obj, { depth: 2 })
+truncate(obj, { maxDepth: 2 })
 ```
 
 Produces:
