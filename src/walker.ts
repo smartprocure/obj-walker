@@ -13,6 +13,7 @@ import {
   Flatten,
   NextNode,
   CompactOptions,
+  Truncate,
 } from './types'
 import {
   isObjectOrArray,
@@ -282,4 +283,23 @@ export const flatten: Flatten = (obj, options = {}) => {
     result[node.path.join(separator)] = node.val
   }
   return result
+}
+
+/**
+ * Truncate an object replacing nested objects at depth greater
+ * than the max specified depth with `replaceWith`. Replace text Defaults
+ * to `[Truncated]`.
+ *
+ * Inspiration: https://www.npmjs.com/package/obj-walker
+ */
+export const truncate: Truncate = (obj, options) => {
+  const depth = options.depth
+  const replaceWith = options.replaceWith ?? '[Truncated]'
+  return map(obj, (node) => {
+    const { path, val, isLeaf } = node
+    if (!isLeaf && path.length === depth) {
+      return replaceWith
+    }
+    return val
+  })
 }

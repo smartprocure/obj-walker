@@ -1,3 +1,7 @@
+# 1.4.0
+
+* Added `truncate` for truncating deep objects.
+
 # 1.3.0
 
 * Make `options` required for `compact`.

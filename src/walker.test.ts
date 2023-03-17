@@ -9,6 +9,7 @@ import {
   mapLeaves,
   findNode,
   compact,
+  truncate,
 } from './walker'
 import { parentIsArray } from './util'
 import { Node } from './types'
@@ -1070,6 +1071,81 @@ describe('compact', () => {
     expect(result).toEqual({
       a: { b: [21, { b2: 26 }] },
       d: [42],
+    })
+  })
+})
+
+describe('truncate', () => {
+  test('should truncate depth 1', () => {
+    const obj = {
+      a: {
+        b: 'Frank',
+      },
+      c: 'Bob',
+      d: 42,
+      e: null,
+    }
+    const result = truncate(obj, { depth: 1 })
+    expect(result).toEqual({
+      a: '[Truncated]',
+      c: 'Bob',
+      d: 42,
+      e: null,
+    })
+  })
+  test('should truncate depth 2', () => {
+    const obj = {
+      a: {
+        b: 'Frank',
+        c: {
+          d: 'Joe',
+        },
+        e: null,
+      },
+      f: 42,
+    }
+    const result = truncate(obj, { depth: 2 })
+    expect(result).toEqual({
+      a: {
+        b: 'Frank',
+        c: '[Truncated]',
+        e: null,
+      },
+      f: 42,
+    })
+  })
+  test('should truncate arrays', () => {
+    const obj = {
+      a: {
+        b: 'Frank',
+        c: {
+          d: ['Bob', { name: 'Joe' }, 'Tom'],
+        },
+        e: null,
+      },
+      f: 42,
+    }
+    const result = truncate(obj, { depth: 4 })
+    expect(result).toEqual({
+      a: { b: 'Frank', c: { d: ['Bob', '[Truncated]', 'Tom'] }, e: null },
+      f: 42,
+    })
+  })
+  test('should allow custom replacement text', () => {
+    const obj = {
+      a: {
+        b: 'Frank',
+      },
+      c: 'Bob',
+      d: 42,
+      e: null,
+    }
+    const result = truncate(obj, { depth: 1, replaceWith: '[Missing]' })
+    expect(result).toEqual({
+      a: '[Missing]',
+      c: 'Bob',
+      d: 42,
+      e: null,
     })
   })
 })

@@ -542,6 +542,50 @@ Produces:
 }
 ```
 
+## truncate
+
+```typescript
+truncate(obj: object, options: TruncateOptions) => object
+```
+
+```typescript
+interface TruncateOptions {
+    depth: number
+    replaceWith?: string
+}
+```
+
+Truncate an object replacing nested objects at depth greater
+than the max specified depth with `replaceWith`. Replace text Defaults
+to `[Truncated]`.
+
+```typescript
+const obj = {
+    a: {
+        b: 'Frank',
+        c: {
+            d: 'Joe',
+        },
+        e: null,
+    },
+    f: 42,
+}
+truncate(obj, { depth: 2 })
+```
+
+Produces:
+
+```typescript
+{
+  a: {
+    b: 'Frank',
+    c: '[Truncated]',
+    e: null,
+  },
+  f: 42,
+}
+```
+
 ## Helper fns
 
 These helper fns are exported for your convenience.
