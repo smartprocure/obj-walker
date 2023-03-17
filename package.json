@@ -31,7 +31,8 @@
     "find",
     "leaves",
     "traverse",
-    "compact"
+    "compact",
+    "truncate"
   ],
   "license": "ISC",
   "prettier": {
