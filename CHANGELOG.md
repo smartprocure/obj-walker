@@ -1,3 +1,8 @@
+# 1.7.0
+
+* Changed `truncate` options from `maxDepth` back to `depth` since `console.dir` uses this name. Also,
+you should probably prefer [dtrim](https://www.npmjs.com/package/dtrim).
+
 # 1.6.0
 
 * Added `walkieAsync` for walking async.

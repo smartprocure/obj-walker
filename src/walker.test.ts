@@ -1108,7 +1108,7 @@ describe('truncate', () => {
       d: 42,
       e: null,
     }
-    const result = truncate(obj, { maxDepth: 1 })
+    const result = truncate(obj, { depth: 1 })
     expect(result).toEqual({
       a: '[Truncated]',
       c: 'Bob',
@@ -1127,7 +1127,7 @@ describe('truncate', () => {
       },
       f: 42,
     }
-    const result = truncate(obj, { maxDepth: 2 })
+    const result = truncate(obj, { depth: 2 })
     expect(result).toEqual({
       a: {
         b: 'Frank',
@@ -1148,7 +1148,7 @@ describe('truncate', () => {
       },
       f: 42,
     }
-    const result = truncate(obj, { maxDepth: 4 })
+    const result = truncate(obj, { depth: 4 })
     expect(result).toEqual({
       a: { b: 'Frank', c: { d: ['Bob', '[Truncated]', 'Tom'] }, e: null },
       f: 42,
@@ -1163,7 +1163,7 @@ describe('truncate', () => {
       d: 42,
       e: null,
     }
-    const result = truncate(obj, { maxDepth: 1, replaceWith: null })
+    const result = truncate(obj, { depth: 1, replaceWith: null })
     expect(result).toEqual({
       a: null,
       c: 'Bob',

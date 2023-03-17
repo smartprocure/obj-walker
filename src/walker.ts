@@ -14,7 +14,6 @@ import {
   NextNode,
   CompactOptions,
   Truncate,
-  AsyncWalkFn,
   WalkieAsync,
 } from './types'
 import {
@@ -308,12 +307,12 @@ export const flatten: Flatten = (obj, options = {}) => {
  * Inspiration: https://www.npmjs.com/package/obj-walker
  */
 export const truncate: Truncate = (obj, options) => {
-  const maxDepth = options.maxDepth
+  const depth = options.depth
   const replaceWith =
     'replaceWith' in options ? options.replaceWith : '[Truncated]'
   return map(obj, (node) => {
     const { path, val, isLeaf } = node
-    if (!isLeaf && path.length === maxDepth) {
+    if (!isLeaf && path.length === depth) {
       return replaceWith
     }
     return val
