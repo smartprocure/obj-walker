@@ -10,6 +10,7 @@ import {
   findNode,
   compact,
   truncate,
+  walkieAsync,
 } from './walker'
 import { parentIsArray } from './util'
 import { Node } from './types'
@@ -609,6 +610,28 @@ describe('walkie', () => {
           },
         },
       },
+    })
+  })
+})
+
+describe('walkieAsync', () => {
+  test('should await walkFn', async () => {
+    const obj = {
+      joe: { scores: [90, 80, 75, 95] },
+      bob: { scores: [95, 87, 92, 88] },
+      frank: { scores: [96, 86, 91, 84] },
+      tom: null,
+    }
+    const result = await walkieAsync(obj, async ({ val }) => {
+      if (_.isPlainObject(val) && 'scores' in val) {
+        val.avg = _.sum(val.scores) / val.scores.length
+      }
+    })
+    expect(result).toEqual({
+      joe: { scores: [90, 80, 75, 95], avg: 85 },
+      bob: { scores: [95, 87, 92, 88], avg: 90.5 },
+      frank: { scores: [96, 86, 91, 84], avg: 89.25 },
+      tom: null,
     })
   })
 })

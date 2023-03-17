@@ -25,14 +25,24 @@ export interface Node {
 }
 
 export type WalkFn = (node: Node) => void
+export type AsyncWalkFn = (node: Node) => void | Promise<void>
 export type FindFn = (node: Node) => boolean
 export type Mapper = (node: Node) => any
+
+export type WalkieAsync = (
+  obj: object,
+  walkFn: AsyncWalkFn,
+  options?: WalkOptions
+) => Promise<object>
+
 export type Map = (obj: object, mapper: Mapper, options?: MapOptions) => object
+
 export type FindNode = (
   obj: object,
   findFn: FindFn,
   options?: Options
 ) => Node | undefined
+
 export type MapInternal = (
   obj: object,
   mapper: Mapper,

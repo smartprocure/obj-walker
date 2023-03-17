@@ -1,3 +1,7 @@
+# 1.6.0
+
+* Added `walkieAsync` for walking async.
+
 # 1.5.0
 
 * Changed `truncate` options from `depth` to `maxDepth` and allow `replaceWith` to be anything.

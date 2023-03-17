@@ -242,6 +242,11 @@ Produces:
 }
 ```
 
+## walkieAsync
+
+Like `walkie` but awaits the promise returned by `walkFn` before proceeding to
+the next node.
+
 ## map
 
 Map over an object modifying values with a fn depth-first in a

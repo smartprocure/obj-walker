@@ -14,6 +14,8 @@ import {
   NextNode,
   CompactOptions,
   Truncate,
+  AsyncWalkFn,
+  WalkieAsync,
 } from './types'
 import {
   isObjectOrArray,
@@ -245,6 +247,19 @@ export const walk = (obj: object, options: WalkOptions = {}) => {
 export const walkie = (obj: object, walkFn: WalkFn, options?: WalkOptions) => {
   const clonedObj = _.cloneDeep(obj)
   walk(clonedObj, options).forEach(walkFn)
+  return clonedObj
+}
+
+/**
+ * Like `walkie` but awaits the promise returned by `walkFn` before proceeding to
+ * the next node.
+ */
+export const walkieAsync: WalkieAsync = async (obj, walkFn, options?) => {
+  const clonedObj = _.cloneDeep(obj)
+  const nodes = walk(clonedObj, options)
+  for (const node of nodes) {
+    await walkFn(node)
+  }
   return clonedObj
 }
 
