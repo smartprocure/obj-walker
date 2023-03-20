@@ -582,8 +582,8 @@ describe('walkie', () => {
       }
     }
     const newObj = walkie(obj, walkFn, { traverse })
-    // Original object wasn't modified
-    expect(obj).toEqual(obj)
+    // Objects are not the same
+    expect(obj).not.toBe(newObj)
     // additionalProperties set to true recursively
     expect(newObj).toEqual({
       bsonType: 'object',
@@ -748,7 +748,8 @@ describe('map', () => {
       },
       { postOrder: true }
     )
-    expect(obj).toEqual(obj)
+    // Objects are not the same
+    expect(obj).not.toBe(result)
     expect(result).toEqual({
       bob: { scores: [87, 95] },
       joe: { scores: [92, 92.5, 73.2] },
@@ -821,6 +822,36 @@ describe('map', () => {
     expect(result).toEqual({
       joe: { age: 42, username: 'joe blow' },
       frank: { age: 39, username: 'frankenstein' },
+    })
+  })
+  test('map while modifying in place', () => {
+    const obj = {
+      bob: {
+        scores: ['87', 'x97', 95, false],
+      },
+      joe: {
+        scores: [92, 92.5, '73.2', ''],
+      },
+      frank: {
+        scores: ['abc', ''],
+      },
+    }
+    const result = map(
+      obj,
+      ({ val, isLeaf }) => {
+        if (isLeaf) {
+          return parseFloat(val)
+        }
+        return Array.isArray(val) ? _.compact(val) : val
+      },
+      { postOrder: true, modifyInPlace: true }
+    )
+    // Objects are the same
+    expect(obj).toBe(result)
+    expect(result).toEqual({
+      bob: { scores: [87, 95] },
+      joe: { scores: [92, 92.5, 73.2] },
+      frank: { scores: [] },
     })
   })
 })
@@ -960,6 +991,8 @@ describe('compact', () => {
     }
     const result = compact(obj, { removeUndefined: true })
     expect(result).toEqual({ a: {}, d: 42, e: [undefined] })
+    // Objects are not the same
+    expect(obj).not.toBe(result)
   })
   test('should remove null', () => {
     const obj = {
@@ -1096,6 +1129,20 @@ describe('compact', () => {
       d: [42],
     })
   })
+  test('should compact while modifying object in place', () => {
+    const obj = {
+      a: {
+        b: undefined,
+      },
+      c: undefined,
+      d: 42,
+      e: [undefined],
+    }
+    const result = compact(obj, { removeUndefined: true, modifyInPlace: true })
+    expect(result).toEqual({ a: {}, d: 42, e: [undefined] })
+    // Objects are the same
+    expect(obj).toBe(result)
+  })
 })
 
 describe('truncate', () => {
@@ -1115,6 +1162,8 @@ describe('truncate', () => {
       d: 42,
       e: null,
     })
+    // Objects are not the same
+    expect(obj).not.toBe(result)
   })
   test('should truncate depth 2', () => {
     const obj = {
@@ -1170,5 +1219,24 @@ describe('truncate', () => {
       d: 42,
       e: null,
     })
+  })
+  test('should truncate and modify object in place', () => {
+    const obj = {
+      a: {
+        b: 'Frank',
+      },
+      c: 'Bob',
+      d: 42,
+      e: null,
+    }
+    const result = truncate(obj, { depth: 1, modifyInPlace: true })
+    expect(result).toEqual({
+      a: '[Truncated]',
+      c: 'Bob',
+      d: 42,
+      e: null,
+    })
+    // Objects are the same
+    expect(obj).toBe(result)
   })
 })

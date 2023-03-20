@@ -1,3 +1,7 @@
+# 1.8.0
+
+* Added `modifyInPlace` option for `map`, `walkie`, `walkieAsync`, `compact`, and `truncate`.
+
 # 1.7.0
 
 * Changed `truncate` options from `maxDepth` back to `depth` since `console.dir` uses this name. Also,
