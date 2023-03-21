@@ -1,6 +1,6 @@
 # 1.8.0
 
-* Added `modifyInPlace` option for `map`, `walkie`, `walkieAsync`, `compact`, and `truncate`.
+* Added `modifyInPlace` option for `map`, `walkie`, `walkieAsync`, `mapLeaves`, `compact`, and `truncate`.
 
 # 1.7.0
 
