@@ -315,18 +315,38 @@ export const compact: Compact = (obj, options) => {
  * than the max specified depth with `replaceWith`. Replace text Defaults
  * to `[Truncated]`.
  *
- * Inspiration: https://www.npmjs.com/package/obj-walker
+ * Inspiration: https://github.com/runk/dtrim
  */
 export const truncate: Truncate = (obj, options) => {
   const depth = options.depth
+  const stringLength = options.stringLength || Infinity
+  const arrayLength = options.arrayLength || Infinity
   const replaceWith =
     'replaceWith' in options ? options.replaceWith : '[Truncated]'
   return map(
     obj,
     (node) => {
       const { path, val, isLeaf } = node
+      // Max depth reached
       if (!isLeaf && path.length === depth) {
         return replaceWith
+      }
+      // Transform Error to plain object
+      if (val instanceof Error) {
+        return {
+          message: val.message,
+          name: val.name,
+          ...(val.stack && { stack: val.stack }),
+          ..._.toPlainObject(val),
+        }
+      }
+      // String exceeds max length
+      if (typeof val === 'string' && val.length > stringLength) {
+        return `${val.slice(0, stringLength)}...`
+      }
+      // Array exceeds max length
+      if (Array.isArray(val) && val.length > arrayLength) {
+        return val.slice(0, arrayLength)
       }
       return val
     },

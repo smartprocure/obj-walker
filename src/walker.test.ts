@@ -1239,4 +1239,55 @@ describe('truncate', () => {
     // Objects are the same
     expect(obj).toBe(result)
   })
+  test('should handle Error', () => {
+    class ValidationError extends Error {
+      context: object
+      constructor(message: any, context: object) {
+        super(message)
+        this.name = 'ValidationError'
+        this.context = context
+      }
+    }
+    const context = { a: { b: { c: { d: 'missing' } } } }
+    const error = new ValidationError('failure', context)
+
+    const obj = {
+      error,
+    }
+    const result = truncate(obj, { depth: 5 })
+    expect(result).toMatchObject({
+      error: {
+        message: 'failure',
+        name: 'ValidationError',
+        context: { a: { b: { c: '[Truncated]' } } },
+      },
+    })
+  })
+  test('should truncate long strings', () => {
+    const obj = {
+      a: {
+        b: '1234567890',
+      },
+      c: '123',
+      d: 42,
+      e: null,
+    }
+    const result = truncate(obj, { depth: 5, stringLength: 5 })
+    expect(result).toEqual({ a: { b: '12345...' }, c: '123', d: 42, e: null })
+  })
+  test('should truncate long arrays', () => {
+    const obj = {
+      a: [1,2,3,4,5],
+      c: '123',
+      d: [1,2],
+      e: null,
+    }
+    const result = truncate(obj, { depth: 5, arrayLength: 3 })
+    expect(result).toEqual({
+      a: [1,2,3],
+      c: '123',
+      d: [1,2],
+      e: null,
+    })
+  })
 })

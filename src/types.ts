@@ -101,7 +101,11 @@ export type Compact = (
 
 export interface TruncateOptions {
   depth: number
+  /** Defaults to [Truncated] */
   replaceWith?: any
+  /** Max length of a string. Default to Infinity. */
+  stringLength?: number
+  arrayLength?: number
 }
 
 export type Truncate = (
