@@ -1,6 +1,7 @@
 # 1.8.0
 
 * Added `modifyInPlace` option for `map`, `walkie`, `walkieAsync`, `mapLeaves`, `compact`, and `truncate`.
+* `truncate` supports `Error` objects and can truncate strings and arrays based on the `stringLength` and `arrayLength` options.
 
 # 1.7.0
 

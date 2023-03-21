@@ -314,6 +314,9 @@ export const compact: Compact = (obj, options) => {
  * Truncate an object replacing nested objects at depth greater
  * than the max specified depth with `replaceWith`. Replace text Defaults
  * to `[Truncated]`.
+ * 
+ * Note: For the best performance you should consider setting `modifyInPlace`
+ * to `true`.
  *
  * Inspiration: https://github.com/runk/dtrim
  */
