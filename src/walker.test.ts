@@ -1277,16 +1277,16 @@ describe('truncate', () => {
   })
   test('should truncate long arrays', () => {
     const obj = {
-      a: [1,2,3,4,5],
+      a: [1, 2, 3, 4, 5],
       c: '123',
-      d: [1,2],
+      d: [1, 2],
       e: null,
     }
     const result = truncate(obj, { depth: 5, arrayLength: 3 })
     expect(result).toEqual({
-      a: [1,2,3],
+      a: [1, 2, 3],
       c: '123',
-      d: [1,2],
+      d: [1, 2],
       e: null,
     })
   })
