@@ -1,7 +1,7 @@
 export interface Options {
   postOrder?: boolean
   jsonCompat?: boolean
-  traverse?(val: any, node: Node): any
+  traverse?(val: any, node?: Node): any
 }
 
 export interface WalkOptions extends Options {
