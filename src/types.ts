@@ -105,6 +105,7 @@ export interface TruncateOptions {
   replaceWith?: any
   /** Max length of a string. Default to Infinity. */
   stringLength?: number
+  /** Max length of an array */
   arrayLength?: number
 }
 
