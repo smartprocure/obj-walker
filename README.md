@@ -17,6 +17,9 @@ Custom traversal functions are supported for some functions. This allows you
 to walk tree-like structures, such as a JSON schema, in a more efficient and
 logical way. Prefer `walkie` in these scenarios.
 
+`map`, `walkie`, `walkieAsync`, `mapLeaves`, `compact`, and `truncate` support
+the option `modifyInPlace` for in-place modification. Otherwise, the object is deep cloned.
+
 ## walker
 
 ```typescript
