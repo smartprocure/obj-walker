@@ -11,6 +11,7 @@ import {
   compact,
   truncate,
   walkieAsync,
+  SHORT_CIRCUIT,
 } from './walker'
 import { parentIsArray } from './util'
 import { Node } from './types'
@@ -43,6 +44,27 @@ describe('walker', () => {
       g: [25, { h: [26, 27] }],
       i: 'Frank',
     })
+  })
+  test('should short-circuit', () => {
+    const obj = {
+      a: {
+        b: 23,
+        c: 24,
+        d: {
+          e: 25
+        }
+      },
+    }
+    let numNodesVisited = 0
+    const walkFn = (node: Node) => {
+      numNodesVisited++
+      const { val } = node
+      if (val === 24) {
+        return SHORT_CIRCUIT
+      }
+    }
+    walker(obj, walkFn)
+    expect(numNodesVisited).toBe(4)
   })
 })
 
@@ -612,6 +634,30 @@ describe('walkie', () => {
       },
     })
   })
+  test('modifyInPlace', () => {
+    const obj = {
+      joe: { scores: [90, 80, 75, 95] },
+      bob: { scores: [95, 87, 92, 88] },
+      frank: { scores: [96, 86, 91, 84] },
+      tom: null,
+    }
+    const result = walkie(
+      obj,
+      ({ val }) => {
+        if (_.isPlainObject(val) && 'scores' in val) {
+          val.avg = _.sum(val.scores) / val.scores.length
+        }
+      },
+      { modifyInPlace: true }
+    )
+    expect(obj).toBe(result)
+    expect(result).toEqual({
+      joe: { scores: [90, 80, 75, 95], avg: 85 },
+      bob: { scores: [95, 87, 92, 88], avg: 90.5 },
+      frank: { scores: [96, 86, 91, 84], avg: 89.25 },
+      tom: null,
+    })
+  })
 })
 
 describe('walkieAsync', () => {
@@ -627,6 +673,7 @@ describe('walkieAsync', () => {
         val.avg = _.sum(val.scores) / val.scores.length
       }
     })
+    expect(obj).not.toBe(result)
     expect(result).toEqual({
       joe: { scores: [90, 80, 75, 95], avg: 85 },
       bob: { scores: [95, 87, 92, 88], avg: 90.5 },
@@ -654,6 +701,7 @@ describe('map', () => {
       Array.isArray(val) ? _.compact(val) : val
     )
     expect(obj).toEqual(obj)
+    expect(obj).not.toBe(result)
     expect(result).toEqual({
       a: { b: 23, c: 24 },
       d: { e: 'Bob', f: [10, 30, [31, 32], 40] },
@@ -870,6 +918,24 @@ describe('mapLeaves', () => {
     }
     const result = mapLeaves(obj, ({ val }) => val + 1)
     expect(obj).toEqual(obj)
+    expect(result).toEqual({
+      a: { b: 24, c: 25 },
+      d: { e: 101, f: [11, 21, 31] },
+    })
+  })
+  test('should modify in place', () => {
+    const obj = {
+      a: {
+        b: 23,
+        c: 24,
+      },
+      d: {
+        e: 100,
+        f: [10, 20, 30],
+      },
+    }
+    const result = mapLeaves(obj, ({ val }) => val + 1, { modifyInPlace: true })
+    expect(obj).toBe(result)
     expect(result).toEqual({
       a: { b: 24, c: 25 },
       d: { e: 101, f: [11, 21, 31] },

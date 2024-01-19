@@ -40,22 +40,32 @@ const nextNode: NextNode = (currentNode, entry, isLeaf) => {
   }
 }
 
+export const SHORT_CIRCUIT = Symbol('SHORT_CIRCUIT')
+
+const shouldShortCircuit = (x: any) => x === SHORT_CIRCUIT
+
 /**
  * Walk an object depth-first in a preorder (default) or postorder manner.
  * Call walkFn for each node visited. Supports traversing the object in
- * arbitrary ways by passing a traverse fn in options.
+ * arbitrary ways by passing a traverse fn in options. Short circuit traversal
+ * by returning the exported symbol `SHORT_CIRCUIT`.
  *
  * Note: this is a low-level function and probably isn't what you want.
  */
 export const walker: Walker = (obj, walkFn, options = {}) => {
+  let shortCircuit = false
   const { postOrder, jsonCompat, traverse = defTraverse } = options
   // A leaf is a node that can't be traversed
   const isLeaf = _.negate(traverse)
   // Recursively walk object
   const _walk = (node: Node): void => {
+    if (shortCircuit) return
     // Preorder
     if (!postOrder) {
-      walkFn(node)
+      if (shouldShortCircuit(walkFn(node))) {
+        shortCircuit = true
+        return
+      }
     }
     const { val } = node
     const next = traverse(val) || []
@@ -64,7 +74,10 @@ export const walker: Walker = (obj, walkFn, options = {}) => {
     }
     // Postorder
     if (postOrder) {
-      walkFn(node)
+      if (shouldShortCircuit(walkFn(node))) {
+        shortCircuit = true
+        return
+      }
     }
   }
 
@@ -174,7 +187,7 @@ export const walk: Walk = (obj, options = {}) => {
  * Walk over an object calling `walkFn` for each node. The original
  * object is deep-cloned by default making it possible to simply mutate each
  * node as needed in order to transform the object. The cloned object
- * is returned.
+ * is returned if `options.modifyInPlace` is not set to true.
  */
 export const walkie: Walkie = (obj, walkFn, options = {}) => {
   if (!options.modifyInPlace) {
@@ -224,30 +237,19 @@ export const mapLeaves: Map = (obj, mapper, options = {}) => {
   return obj
 }
 
-const FOUND = Symbol('FOUND')
-
 /**
  * Search for a node and short-circuit the traversal if it's found.
  */
 export const findNode: FindNode = (obj, findFn, options = {}) => {
   let node: Node | undefined
-  try {
-    walker(
-      obj,
-      (n: Node) => {
-        if (findFn(n)) {
-          node = n
-          throw FOUND
-        }
-      },
-      options
-    )
-  } catch (e) {
-    if (e === FOUND) {
-      return node
+  const walkFn = (n: Node) => {
+    if (findFn(n)) {
+      node = n
+      return SHORT_CIRCUIT
     }
-    throw e
   }
+  walker(obj, walkFn, options)
+  return node
 }
 
 /**
@@ -314,7 +316,7 @@ export const compact: Compact = (obj, options) => {
  * Truncate an object replacing nested objects at depth greater
  * than the max specified depth with `replaceWith`. Replace text Defaults
  * to `[Truncated]`.
- * 
+ *
  * Note: For the best performance you should consider setting `modifyInPlace`
  * to `true`.
  *

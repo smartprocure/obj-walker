@@ -10,6 +10,7 @@
     "prepare": "npm run lint && npm test && npm run build",
     "clean": "rm -rf dist",
     "build": "npm run clean && tsc --declaration",
+    "build:watch": "tsc --watch",
     "test": "jest",
     "lint": "eslint src/**"
   },
