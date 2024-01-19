@@ -2,19 +2,20 @@ import { set, unset } from 'lodash'
 import _ from 'lodash/fp'
 import {
   Compact,
-  WalkFn,
   Map,
-  Options,
   Node,
   MapOptions,
-  WalkOptions,
+  Walk,
   MapInternal,
   FindNode,
   Flatten,
   NextNode,
   CompactOptions,
   Truncate,
+  Walkie,
   WalkieAsync,
+  Walker,
+  MutationOption,
 } from './types'
 import {
   isObjectOrArray,
@@ -39,20 +40,32 @@ const nextNode: NextNode = (currentNode, entry, isLeaf) => {
   }
 }
 
+export const SHORT_CIRCUIT = Symbol('SHORT_CIRCUIT')
+
+const shouldShortCircuit = (x: any) => x === SHORT_CIRCUIT
+
 /**
  * Walk an object depth-first in a preorder (default) or postorder manner.
  * Call walkFn for each node visited. Supports traversing the object in
- * arbitrary ways by passing a traverse fn in options.
+ * arbitrary ways by passing a traverse fn in options. Short circuit traversal
+ * by returning the exported symbol `SHORT_CIRCUIT`.
+ *
+ * Note: this is a low-level function and probably isn't what you want.
  */
-export const walker = (obj: object, walkFn: WalkFn, options: Options = {}) => {
+export const walker: Walker = (obj, walkFn, options = {}) => {
+  let shortCircuit = false
   const { postOrder, jsonCompat, traverse = defTraverse } = options
   // A leaf is a node that can't be traversed
   const isLeaf = _.negate(traverse)
   // Recursively walk object
   const _walk = (node: Node): void => {
+    if (shortCircuit) return
     // Preorder
     if (!postOrder) {
-      walkFn(node)
+      if (shouldShortCircuit(walkFn(node))) {
+        shortCircuit = true
+        return
+      }
     }
     const { val } = node
     const next = traverse(val) || []
@@ -61,41 +74,17 @@ export const walker = (obj: object, walkFn: WalkFn, options: Options = {}) => {
     }
     // Postorder
     if (postOrder) {
-      walkFn(node)
+      if (shouldShortCircuit(walkFn(node))) {
+        shortCircuit = true
+        return
+      }
     }
   }
 
   _walk(getRoot(obj, jsonCompat))
 }
 
-const FOUND = Symbol('FOUND')
-
-/**
- * Search for a node and short-circuit the tree traversal if it's found.
- */
-export const findNode: FindNode = (obj, findFn, options = {}) => {
-  let node: Node | undefined
-  try {
-    walker(
-      obj,
-      (n: Node) => {
-        if (findFn(n)) {
-          node = n
-          throw FOUND
-        }
-      },
-      options
-    )
-  } catch (e) {
-    if (e === FOUND) {
-      return node
-    }
-    throw e
-  }
-}
-
 const mapPre: MapInternal = (obj, mapper, options) => {
-  let result = _.cloneDeep(obj)
   const traverse = defTraverse
   const { jsonCompat, shouldSkip } = options
   // A leaf is a node that can't be traversed
@@ -106,49 +95,49 @@ const mapPre: MapInternal = (obj, mapper, options) => {
     const newVal = mapper(node)
     // Should skip value
     if (shouldSkip(newVal, node)) {
-      unset(result, path)
+      unset(obj, path)
       return
     }
     if (isRoot) {
-      result = newVal
+      obj = newVal
     } else {
-      set(result, path, newVal)
+      set(obj, path, newVal)
     }
     const next = traverse(newVal) || []
     for (const entry of Object.entries(next)) {
       _walk(nextNode(node, entry, isLeaf))
     }
   }
-  _walk(getRoot(result, jsonCompat))
-  return result
+  _walk(getRoot(obj, jsonCompat))
+  return obj
 }
 
 const mapPost: MapInternal = (obj, mapper, options) => {
-  let result = _.cloneDeep(obj)
   walker(
-    result,
+    obj,
     (node) => {
       const { isRoot, path } = node
       const newVal = mapper(node)
       // Should skip value
       if (options.shouldSkip(newVal, node)) {
-        unset(result, path)
+        unset(obj, path)
         return
       }
       if (isRoot) {
-        result = newVal
+        obj = newVal
       } else {
-        set(result, path, newVal)
+        set(obj, path, newVal)
       }
     },
     { ...options, postOrder: true }
   )
-  return result
+  return obj
 }
 
-const setMapDefaults = (options: MapOptions) => ({
+const setMapDefaults = (options: MapOptions & MutationOption) => ({
   postOrder: options.postOrder ?? false,
   jsonCompat: options.jsonCompat ?? false,
+  modifyInPlace: options.modifyInPlace ?? false,
   shouldSkip: options.shouldSkip ?? defShouldSkip,
 })
 
@@ -166,10 +155,115 @@ export const map: Map = (obj, mapper, options = {}) => {
     return obj
   }
   const opts = setMapDefaults(options)
+  if (!opts.modifyInPlace) {
+    obj = _.cloneDeep(obj)
+  }
   if (options.postOrder) {
     return mapPost(obj, mapper, opts)
   }
   return mapPre(obj, mapper, opts)
+}
+
+/**
+ * Walk an object depth-first in a preorder (default) or
+ * postorder manner. Returns an array of nodes.
+ */
+export const walk: Walk = (obj, options = {}) => {
+  const nodes: Node[] = []
+  const walkFn = (node: Node) => {
+    nodes.push(node)
+  }
+  walker(obj, walkFn, options)
+  // Filter the leaves
+  if (options.leavesOnly) {
+    return _.filter('isLeaf', nodes)
+  }
+  return nodes
+}
+
+/**
+ * Walk-each ~ walkie
+ *
+ * Walk over an object calling `walkFn` for each node. The original
+ * object is deep-cloned by default making it possible to simply mutate each
+ * node as needed in order to transform the object. The cloned object
+ * is returned if `options.modifyInPlace` is not set to true.
+ */
+export const walkie: Walkie = (obj, walkFn, options = {}) => {
+  if (!options.modifyInPlace) {
+    obj = _.cloneDeep(obj)
+  }
+  walk(obj, options).forEach(walkFn)
+  return obj
+}
+
+/**
+ * Like `walkie` but awaits the promise returned by `walkFn` before proceeding to
+ * the next node.
+ */
+export const walkieAsync: WalkieAsync = async (obj, walkFn, options = {}) => {
+  if (!options.modifyInPlace) {
+    obj = _.cloneDeep(obj)
+  }
+  const nodes = walk(obj, options)
+  for (const node of nodes) {
+    await walkFn(node)
+  }
+  return obj
+}
+
+/**
+ * Map over the leaves of an object with a fn. By default, nodes will be excluded
+ * by returning `undefined`. Undefined array values will not be excluded. To customize
+ * pass a fn for `options.shouldSkip`.
+ */
+export const mapLeaves: Map = (obj, mapper, options = {}) => {
+  if (!isObjectOrArray(obj)) {
+    return obj
+  }
+  const opts = setMapDefaults(options)
+  const nodes = walk(obj, { ...opts, leavesOnly: true })
+  if (!opts.modifyInPlace) {
+    obj = _.isPlainObject(obj) ? {} : []
+  }
+  for (const node of nodes) {
+    const newVal = mapper(node)
+    // Should skip value
+    if (opts.shouldSkip(newVal, node)) {
+      continue
+    }
+    set(obj, node.path, newVal)
+  }
+  return obj
+}
+
+/**
+ * Search for a node and short-circuit the traversal if it's found.
+ */
+export const findNode: FindNode = (obj, findFn, options = {}) => {
+  let node: Node | undefined
+  const walkFn = (n: Node) => {
+    if (findFn(n)) {
+      node = n
+      return SHORT_CIRCUIT
+    }
+  }
+  walker(obj, walkFn, options)
+  return node
+}
+
+/**
+ * Flatten an object's keys. Optionally pass `separator` to determine
+ * what character to join keys with. Defaults to '.'.
+ */
+export const flatten: Flatten = (obj, options = {}) => {
+  const nodes = walk(obj, { ...options, leavesOnly: true })
+  const separator = options?.separator || '.'
+  const result: Record<string, any> = {}
+  for (const node of nodes) {
+    result[node.path.join(separator)] = node.val
+  }
+  return result
 }
 
 const buildCompactFilter = (options: CompactOptions) => {
@@ -201,8 +295,8 @@ const buildCompactFilter = (options: CompactOptions) => {
 
 /**
  * Compact an object, removing fields recursively according to the supplied options.
- * All option flags are `false` by default. If `compactArrays` is set to `true` arrays
- * will be compacted based on the enabled remove option flags.
+ * All option flags are `false` by default. If `compactArrays` is set to `true`, arrays
+ * will be compacted based on the enabled 'remove' option flags.
  */
 export const compact: Compact = (obj, options) => {
   const remove = buildCompactFilter(options)
@@ -215,88 +309,7 @@ export const compact: Compact = (obj, options) => {
       return val
     }
   }
-  return map(obj, mapper, { postOrder: true })
-}
-
-/**
- * Walk an object depth-first in a preorder (default) or
- * postorder manner. Returns an array of nodes.
- */
-export const walk = (obj: object, options: WalkOptions = {}) => {
-  const nodes: Node[] = []
-  const walkFn = (node: Node) => {
-    nodes.push(node)
-  }
-  walker(obj, walkFn, options)
-  // Filter the leaves
-  if (options.leavesOnly) {
-    return _.filter('isLeaf', nodes)
-  }
-  return nodes
-}
-
-/**
- * Walk-each ~ walkie
- *
- * Walk over an object calling walkFn for each node. The original
- * object is deep-cloned making it possible to simply mutate each
- * node as needed in order to transform the object. The cloned object
- * is returned.
- */
-export const walkie = (obj: object, walkFn: WalkFn, options?: WalkOptions) => {
-  const clonedObj = _.cloneDeep(obj)
-  walk(clonedObj, options).forEach(walkFn)
-  return clonedObj
-}
-
-/**
- * Like `walkie` but awaits the promise returned by `walkFn` before proceeding to
- * the next node.
- */
-export const walkieAsync: WalkieAsync = async (obj, walkFn, options?) => {
-  const clonedObj = _.cloneDeep(obj)
-  const nodes = walk(clonedObj, options)
-  for (const node of nodes) {
-    await walkFn(node)
-  }
-  return clonedObj
-}
-
-/**
- * Map over the leaves of an object with a fn. By default, nodes will be excluded
- * by returning `undefined`. Undefined array values will not be excluded. To customize
- * pass a fn for `options.shouldSkip`.
- */
-export const mapLeaves: Map = (obj, mapper, options = {}) => {
-  if (!isObjectOrArray(obj)) {
-    return obj
-  }
-  const opts = setMapDefaults(options)
-  const nodes = walk(obj, { ...opts, leavesOnly: true })
-  const result = _.isPlainObject(obj) ? {} : []
-  for (const node of nodes) {
-    const newVal = mapper(node)
-    // Should skip value
-    if (opts.shouldSkip(newVal, node)) {
-      continue
-    }
-    set(result, node.path, newVal)
-  }
-  return result
-}
-
-/**
- * Flatten an object's keys. Optionally pass `separator` to determine
- * what character to join keys with. Defaults to '.'.
- */
-export const flatten: Flatten = (obj, options = {}) => {
-  const nodes = walk(obj, { ...options, leavesOnly: true })
-  const separator = options?.separator || '.'
-  const result: Record<string, any> = {}
-  for (const node of nodes) {
-    result[node.path.join(separator)] = node.val
-  }
-  return result
+  return map(obj, mapper, { ...options, postOrder: true })
 }
 
 /**
@@ -304,17 +317,44 @@ export const flatten: Flatten = (obj, options = {}) => {
  * than the max specified depth with `replaceWith`. Replace text Defaults
  * to `[Truncated]`.
  *
- * Inspiration: https://www.npmjs.com/package/obj-walker
+ * Note: For the best performance you should consider setting `modifyInPlace`
+ * to `true`.
+ *
+ * Inspiration: https://github.com/runk/dtrim
  */
 export const truncate: Truncate = (obj, options) => {
   const depth = options.depth
+  const stringLength = options.stringLength || Infinity
+  const arrayLength = options.arrayLength || Infinity
   const replaceWith =
     'replaceWith' in options ? options.replaceWith : '[Truncated]'
-  return map(obj, (node) => {
-    const { path, val, isLeaf } = node
-    if (!isLeaf && path.length === depth) {
-      return replaceWith
-    }
-    return val
-  })
+  return map(
+    obj,
+    (node) => {
+      const { path, val, isLeaf } = node
+      // Max depth reached
+      if (!isLeaf && path.length === depth) {
+        return replaceWith
+      }
+      // Transform Error to plain object
+      if (val instanceof Error) {
+        return {
+          message: val.message,
+          name: val.name,
+          ...(val.stack && { stack: val.stack }),
+          ..._.toPlainObject(val),
+        }
+      }
+      // String exceeds max length
+      if (typeof val === 'string' && val.length > stringLength) {
+        return `${val.slice(0, stringLength)}...`
+      }
+      // Array exceeds max length
+      if (Array.isArray(val) && val.length > arrayLength) {
+        return val.slice(0, arrayLength)
+      }
+      return val
+    },
+    options
+  )
 }

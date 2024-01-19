@@ -17,6 +17,9 @@ Custom traversal functions are supported for some functions. This allows you
 to walk tree-like structures, such as a JSON schema, in a more efficient and
 logical way. Prefer `walkie` in these scenarios.
 
+`map`, `walkie`, `walkieAsync`, `mapLeaves`, `compact`, and `truncate` support
+the option `modifyInPlace` for in-place modification. Otherwise, the object is deep cloned.
+
 ## walker
 
 ```typescript
@@ -162,9 +165,9 @@ export type WalkFn = (node: Node) => void
 Walk-each ~ walkie
 
 Walk over an object calling `walkFn` for each node. The original
-object is deep-cloned making it possible to simply mutate each
+object is deep-cloned by default making it possible to simply mutate each
 node as needed in order to transform the object. The cloned object
-is returned.
+is returned if `options.modifyInPlace` is not set to true.
 
 Below I want to walk a MongoDB JSON schema and set `additionalProperties` to `true`
 wherever it exists. I traverse this tree using a custom `traverse` fn.

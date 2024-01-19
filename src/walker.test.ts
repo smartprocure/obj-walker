@@ -11,6 +11,7 @@ import {
   compact,
   truncate,
   walkieAsync,
+  SHORT_CIRCUIT,
 } from './walker'
 import { parentIsArray } from './util'
 import { Node } from './types'
@@ -43,6 +44,27 @@ describe('walker', () => {
       g: [25, { h: [26, 27] }],
       i: 'Frank',
     })
+  })
+  test('should short-circuit', () => {
+    const obj = {
+      a: {
+        b: 23,
+        c: 24,
+        d: {
+          e: 25
+        }
+      },
+    }
+    let numNodesVisited = 0
+    const walkFn = (node: Node) => {
+      numNodesVisited++
+      const { val } = node
+      if (val === 24) {
+        return SHORT_CIRCUIT
+      }
+    }
+    walker(obj, walkFn)
+    expect(numNodesVisited).toBe(4)
   })
 })
 
@@ -582,8 +604,8 @@ describe('walkie', () => {
       }
     }
     const newObj = walkie(obj, walkFn, { traverse })
-    // Original object wasn't modified
-    expect(obj).toEqual(obj)
+    // Objects are not the same
+    expect(obj).not.toBe(newObj)
     // additionalProperties set to true recursively
     expect(newObj).toEqual({
       bsonType: 'object',
@@ -612,6 +634,30 @@ describe('walkie', () => {
       },
     })
   })
+  test('modifyInPlace', () => {
+    const obj = {
+      joe: { scores: [90, 80, 75, 95] },
+      bob: { scores: [95, 87, 92, 88] },
+      frank: { scores: [96, 86, 91, 84] },
+      tom: null,
+    }
+    const result = walkie(
+      obj,
+      ({ val }) => {
+        if (_.isPlainObject(val) && 'scores' in val) {
+          val.avg = _.sum(val.scores) / val.scores.length
+        }
+      },
+      { modifyInPlace: true }
+    )
+    expect(obj).toBe(result)
+    expect(result).toEqual({
+      joe: { scores: [90, 80, 75, 95], avg: 85 },
+      bob: { scores: [95, 87, 92, 88], avg: 90.5 },
+      frank: { scores: [96, 86, 91, 84], avg: 89.25 },
+      tom: null,
+    })
+  })
 })
 
 describe('walkieAsync', () => {
@@ -627,6 +673,7 @@ describe('walkieAsync', () => {
         val.avg = _.sum(val.scores) / val.scores.length
       }
     })
+    expect(obj).not.toBe(result)
     expect(result).toEqual({
       joe: { scores: [90, 80, 75, 95], avg: 85 },
       bob: { scores: [95, 87, 92, 88], avg: 90.5 },
@@ -654,6 +701,7 @@ describe('map', () => {
       Array.isArray(val) ? _.compact(val) : val
     )
     expect(obj).toEqual(obj)
+    expect(obj).not.toBe(result)
     expect(result).toEqual({
       a: { b: 23, c: 24 },
       d: { e: 'Bob', f: [10, 30, [31, 32], 40] },
@@ -748,7 +796,8 @@ describe('map', () => {
       },
       { postOrder: true }
     )
-    expect(obj).toEqual(obj)
+    // Objects are not the same
+    expect(obj).not.toBe(result)
     expect(result).toEqual({
       bob: { scores: [87, 95] },
       joe: { scores: [92, 92.5, 73.2] },
@@ -823,6 +872,36 @@ describe('map', () => {
       frank: { age: 39, username: 'frankenstein' },
     })
   })
+  test('map while modifying in place', () => {
+    const obj = {
+      bob: {
+        scores: ['87', 'x97', 95, false],
+      },
+      joe: {
+        scores: [92, 92.5, '73.2', ''],
+      },
+      frank: {
+        scores: ['abc', ''],
+      },
+    }
+    const result = map(
+      obj,
+      ({ val, isLeaf }) => {
+        if (isLeaf) {
+          return parseFloat(val)
+        }
+        return Array.isArray(val) ? _.compact(val) : val
+      },
+      { postOrder: true, modifyInPlace: true }
+    )
+    // Objects are the same
+    expect(obj).toBe(result)
+    expect(result).toEqual({
+      bob: { scores: [87, 95] },
+      joe: { scores: [92, 92.5, 73.2] },
+      frank: { scores: [] },
+    })
+  })
 })
 
 describe('mapLeaves', () => {
@@ -839,6 +918,24 @@ describe('mapLeaves', () => {
     }
     const result = mapLeaves(obj, ({ val }) => val + 1)
     expect(obj).toEqual(obj)
+    expect(result).toEqual({
+      a: { b: 24, c: 25 },
+      d: { e: 101, f: [11, 21, 31] },
+    })
+  })
+  test('should modify in place', () => {
+    const obj = {
+      a: {
+        b: 23,
+        c: 24,
+      },
+      d: {
+        e: 100,
+        f: [10, 20, 30],
+      },
+    }
+    const result = mapLeaves(obj, ({ val }) => val + 1, { modifyInPlace: true })
+    expect(obj).toBe(result)
     expect(result).toEqual({
       a: { b: 24, c: 25 },
       d: { e: 101, f: [11, 21, 31] },
@@ -960,6 +1057,8 @@ describe('compact', () => {
     }
     const result = compact(obj, { removeUndefined: true })
     expect(result).toEqual({ a: {}, d: 42, e: [undefined] })
+    // Objects are not the same
+    expect(obj).not.toBe(result)
   })
   test('should remove null', () => {
     const obj = {
@@ -1096,6 +1195,20 @@ describe('compact', () => {
       d: [42],
     })
   })
+  test('should compact while modifying object in place', () => {
+    const obj = {
+      a: {
+        b: undefined,
+      },
+      c: undefined,
+      d: 42,
+      e: [undefined],
+    }
+    const result = compact(obj, { removeUndefined: true, modifyInPlace: true })
+    expect(result).toEqual({ a: {}, d: 42, e: [undefined] })
+    // Objects are the same
+    expect(obj).toBe(result)
+  })
 })
 
 describe('truncate', () => {
@@ -1115,6 +1228,8 @@ describe('truncate', () => {
       d: 42,
       e: null,
     })
+    // Objects are not the same
+    expect(obj).not.toBe(result)
   })
   test('should truncate depth 2', () => {
     const obj = {
@@ -1168,6 +1283,76 @@ describe('truncate', () => {
       a: null,
       c: 'Bob',
       d: 42,
+      e: null,
+    })
+  })
+  test('should truncate and modify object in place', () => {
+    const obj = {
+      a: {
+        b: 'Frank',
+      },
+      c: 'Bob',
+      d: 42,
+      e: null,
+    }
+    const result = truncate(obj, { depth: 1, modifyInPlace: true })
+    expect(result).toEqual({
+      a: '[Truncated]',
+      c: 'Bob',
+      d: 42,
+      e: null,
+    })
+    // Objects are the same
+    expect(obj).toBe(result)
+  })
+  test('should handle Error', () => {
+    class ValidationError extends Error {
+      context: object
+      constructor(message: any, context: object) {
+        super(message)
+        this.name = 'ValidationError'
+        this.context = context
+      }
+    }
+    const context = { a: { b: { c: { d: 'missing' } } } }
+    const error = new ValidationError('failure', context)
+
+    const obj = {
+      error,
+    }
+    const result = truncate(obj, { depth: 5 })
+    expect(result).toMatchObject({
+      error: {
+        message: 'failure',
+        name: 'ValidationError',
+        context: { a: { b: { c: '[Truncated]' } } },
+      },
+    })
+  })
+  test('should truncate long strings', () => {
+    const obj = {
+      a: {
+        b: '1234567890',
+      },
+      c: '123',
+      d: 42,
+      e: null,
+    }
+    const result = truncate(obj, { depth: 5, stringLength: 5 })
+    expect(result).toEqual({ a: { b: '12345...' }, c: '123', d: 42, e: null })
+  })
+  test('should truncate long arrays', () => {
+    const obj = {
+      a: [1, 2, 3, 4, 5],
+      c: '123',
+      d: [1, 2],
+      e: null,
+    }
+    const result = truncate(obj, { depth: 5, arrayLength: 3 })
+    expect(result).toEqual({
+      a: [1, 2, 3],
+      c: '123',
+      d: [1, 2],
       e: null,
     })
   })
