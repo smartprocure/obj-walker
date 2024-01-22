@@ -252,16 +252,42 @@ export const findNode: FindNode = (obj, findFn, options = {}) => {
   return node
 }
 
+const chunkPath = (path: string[], separator: string) => {
+  let nestedPath: string[] = []
+  const chunkedPath = []
+  const addNestedPath = () => {
+    if (nestedPath.length) {
+      chunkedPath.push(nestedPath.join(separator))
+      nestedPath = []
+    }
+  }
+  for (const key of path) {
+    if (/[0-9]+/.test(key)) {
+      addNestedPath()
+      chunkedPath.push(key)
+    } else {
+      nestedPath.push(key)
+    }
+  }
+  addNestedPath()
+  return chunkedPath
+}
+
 /**
  * Flatten an object's keys. Optionally pass `separator` to determine
  * what character to join keys with. Defaults to '.'.
  */
 export const flatten: Flatten = (obj, options = {}) => {
   const nodes = walk(obj, { ...options, leavesOnly: true })
-  const separator = options?.separator || '.'
+  const separator = options.separator || '.'
   const result: Record<string, any> = {}
   for (const node of nodes) {
-    result[node.path.join(separator)] = node.val
+    if (options.objectsOnly) {
+      const path = chunkPath(node.path, separator)
+      set(result, path, node.val)
+    } else {
+      result[node.path.join(separator)] = node.val
+    }
   }
   return result
 }

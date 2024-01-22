@@ -51,8 +51,8 @@ describe('walker', () => {
         b: 23,
         c: 24,
         d: {
-          e: 25
-        }
+          e: 25,
+        },
       },
     }
     let numNodesVisited = 0
@@ -952,7 +952,7 @@ describe('flatten', () => {
       },
       d: {
         e: 100,
-        f: [10, 20, 30],
+        f: [10, 20, { g: 30, h: { i: 40 } }],
       },
     }
     const result = flatten(obj)
@@ -962,7 +962,48 @@ describe('flatten', () => {
       'd.e': 100,
       'd.f.0': 10,
       'd.f.1': 20,
-      'd.f.2': 30,
+      'd.f.2.g': 30,
+      'd.f.2.h.i': 40,
+    })
+  })
+  test('should flatten array', () => {
+    const arr = [10, 20, { a: { b: 20, c: 30, d: [40, { e: { f: 50 } }] } }]
+    const result = flatten(arr)
+    expect(result).toEqual({
+      '0': 10,
+      '1': 20,
+      '2.a.b': 20,
+      '2.a.c': 30,
+      '2.a.d.0': 40,
+      '2.a.d.1.e.f': 50,
+    })
+  })
+  test('should flatten array with objectsOnly set to true', () => {
+    const arr = [10, 20, { a: { b: 20, c: 30, d: [40, { e: { f: 50 } }] } }]
+    const result = flatten(arr, { objectsOnly: true })
+    expect(result).toEqual({
+      '0': 10,
+      '1': 20,
+      '2': { 'a.b': 20, 'a.c': 30, 'a.d': [40, { 'e.f': 50 }] },
+    })
+  })
+  test('should flatten object with objectsOnly set to true', () => {
+    const obj = {
+      a: {
+        b: 23,
+        c: 24,
+      },
+      d: {
+        e: 100,
+        f: [10, 20, { g: 30, h: { i: 40 } }],
+      },
+    }
+    const result = flatten(obj, { objectsOnly: true })
+    expect(result).toEqual({
+      'a.b': 23,
+      'a.c': 24,
+      'd.e': 100,
+      'd.f': [10, 20, { g: 30, 'h.i': 40 }],
     })
   })
   test('should flatten with custom traversal and custom separator', () => {
