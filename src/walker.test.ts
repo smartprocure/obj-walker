@@ -981,7 +981,6 @@ describe('flatten', () => {
   test('should flatten array with objectsOnly set to true', () => {
     const arr = [10, 20, { a: { b: 20, c: 30, d: [40, { e: { f: 50 } }] } }]
     const result = flatten(arr, { objectsOnly: true })
-    console.dir(result, { depth: 10 })
     expect(result).toEqual([
       10,
       20,
