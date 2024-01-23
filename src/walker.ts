@@ -252,16 +252,42 @@ export const findNode: FindNode = (obj, findFn, options = {}) => {
   return node
 }
 
+const chunkPath = (path: string[], separator: string) => {
+  let nestedPath: string[] = []
+  const chunkedPath = []
+  const addNestedPath = () => {
+    if (nestedPath.length) {
+      chunkedPath.push(nestedPath.join(separator))
+      nestedPath = []
+    }
+  }
+  for (const key of path) {
+    if (/[0-9]+/.test(key)) {
+      addNestedPath()
+      chunkedPath.push(key)
+    } else {
+      nestedPath.push(key)
+    }
+  }
+  addNestedPath()
+  return chunkedPath
+}
+
 /**
  * Flatten an object's keys. Optionally pass `separator` to determine
- * what character to join keys with. Defaults to '.'.
+ * what character to join keys with. Defaults to '.'. If an array is
+ * passed, an object of path to values is returned unless the `objectsOnly`
+ * option is set.
  */
 export const flatten: Flatten = (obj, options = {}) => {
   const nodes = walk(obj, { ...options, leavesOnly: true })
-  const separator = options?.separator || '.'
-  const result: Record<string, any> = {}
+  const separator = options.separator || '.'
+  const result: any = Array.isArray(obj) && options.objectsOnly ? [] : {}
   for (const node of nodes) {
-    result[node.path.join(separator)] = node.val
+    const path = options.objectsOnly
+      ? chunkPath(node.path, separator)
+      : [node.path.join(separator)]
+    set(result, path, node.val)
   }
   return result
 }

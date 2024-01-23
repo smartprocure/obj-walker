@@ -75,13 +75,16 @@ export type MapInternal = (
 ) => object
 
 export interface FlattenOptions {
+  /** Defaults to '.' */
   separator?: string
+  /** Flatten objects and not arrays */
+  objectsOnly?: boolean
 }
 
 export type Flatten = (
   obj: object,
   options?: WalkOptions & FlattenOptions
-) => Record<string, any>
+) => object
 
 export interface CompactOptions {
   removeUndefined?: boolean

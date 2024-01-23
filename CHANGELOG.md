@@ -1,3 +1,7 @@
+# 1.9.0
+
+- Added `objectsOnly` option to `flatten`.
+
 # 1.8.0
 
 -   Added `modifyInPlace` option for `map`, `walkie`, `walkieAsync`, `mapLeaves`, `compact`, and `truncate`.
