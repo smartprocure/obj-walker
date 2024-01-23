@@ -459,7 +459,7 @@ Produces:
 ## flatten
 
 ```typescript
-flatten(obj: object, options?: WalkOptions & FlattenOptions) => Record<string, any>
+flatten(obj: object, options?: WalkOptions & FlattenOptions) => object
 ```
 
 Flatten an object's keys. Optionally pass `separator` to determine
