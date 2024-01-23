@@ -84,7 +84,7 @@ export interface FlattenOptions {
 export type Flatten = (
   obj: object,
   options?: WalkOptions & FlattenOptions
-) => Record<string, any>
+) => object
 
 export interface CompactOptions {
   removeUndefined?: boolean

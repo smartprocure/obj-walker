@@ -463,7 +463,8 @@ flatten(obj: object, options?: WalkOptions & FlattenOptions) => Record<string, a
 ```
 
 Flatten an object's keys. Optionally pass `separator` to determine
-what character to join keys with. Defaults to '.'.
+what character to join keys with. Defaults to '.'. If an array is
+passed, the `objectsOnly` option is automatically set to true.
 
 ```typescript
 import { flatten } from 'obj-walker'

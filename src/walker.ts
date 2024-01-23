@@ -275,14 +275,15 @@ const chunkPath = (path: string[], separator: string) => {
 
 /**
  * Flatten an object's keys. Optionally pass `separator` to determine
- * what character to join keys with. Defaults to '.'.
+ * what character to join keys with. Defaults to '.'. If an array is
+ * passed, the `objectsOnly` option is automatically set to true.
  */
 export const flatten: Flatten = (obj, options = {}) => {
   const nodes = walk(obj, { ...options, leavesOnly: true })
   const separator = options.separator || '.'
-  const result: Record<string, any> = {}
+  const result: any = _.isPlainObject(obj) ? {} : []
   for (const node of nodes) {
-    if (options.objectsOnly) {
+    if (options.objectsOnly || Array.isArray(obj)) {
       const path = chunkPath(node.path, separator)
       set(result, path, node.val)
     } else {
