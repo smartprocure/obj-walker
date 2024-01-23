@@ -966,6 +966,25 @@ describe('flatten', () => {
       'd.f.2.h.i': 40,
     })
   })
+  test('should flatten object with objectsOnly set to true', () => {
+    const obj = {
+      a: {
+        b: 23,
+        c: 24,
+      },
+      d: {
+        e: 100,
+        f: [10, 20, { g: 30, h: { i: 40 } }],
+      },
+    }
+    const result = flatten(obj, { objectsOnly: true })
+    expect(result).toEqual({
+      'a.b': 23,
+      'a.c': 24,
+      'd.e': 100,
+      'd.f': [10, 20, { g: 30, 'h.i': 40 }],
+    })
+  })
   test('should flatten array', () => {
     const arr = [10, 20, { a: { b: 20, c: 30, d: [40, { e: { f: 50 } }] } }]
     const result = flatten(arr)
@@ -986,25 +1005,6 @@ describe('flatten', () => {
       20,
       { 'a.b': 20, 'a.c': 30, 'a.d': [40, { 'e.f': 50 }] },
     ])
-  })
-  test('should flatten object with objectsOnly set to true', () => {
-    const obj = {
-      a: {
-        b: 23,
-        c: 24,
-      },
-      d: {
-        e: 100,
-        f: [10, 20, { g: 30, h: { i: 40 } }],
-      },
-    }
-    const result = flatten(obj, { objectsOnly: true })
-    expect(result).toEqual({
-      'a.b': 23,
-      'a.c': 24,
-      'd.e': 100,
-      'd.f': [10, 20, { g: 30, 'h.i': 40 }],
-    })
   })
   test('should flatten with custom traversal and custom separator', () => {
     const obj = {
