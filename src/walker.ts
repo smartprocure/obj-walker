@@ -276,19 +276,18 @@ const chunkPath = (path: string[], separator: string) => {
 /**
  * Flatten an object's keys. Optionally pass `separator` to determine
  * what character to join keys with. Defaults to '.'. If an array is
- * passed, the `objectsOnly` option is automatically set to true.
+ * passed, an object of path to values is returned unless the `objectsOnly`
+ * option is set.
  */
 export const flatten: Flatten = (obj, options = {}) => {
   const nodes = walk(obj, { ...options, leavesOnly: true })
   const separator = options.separator || '.'
-  const result: any = _.isPlainObject(obj) ? {} : []
+  const result: any = Array.isArray(obj) && options.objectsOnly ? [] : {}
   for (const node of nodes) {
-    if (options.objectsOnly || Array.isArray(obj)) {
-      const path = chunkPath(node.path, separator)
-      set(result, path, node.val)
-    } else {
-      result[node.path.join(separator)] = node.val
-    }
+    const path = options.objectsOnly
+      ? chunkPath(node.path, separator)
+      : [node.path.join(separator)]
+    set(result, path, node.val)
   }
   return result
 }

@@ -464,7 +464,8 @@ flatten(obj: object, options?: WalkOptions & FlattenOptions) => object
 
 Flatten an object's keys. Optionally pass `separator` to determine
 what character to join keys with. Defaults to '.'. If an array is
-passed, the `objectsOnly` option is automatically set to true.
+passed, an object of path to values is returned unless the `objectsOnly`
+option is set.
 
 ```typescript
 import { flatten } from 'obj-walker'

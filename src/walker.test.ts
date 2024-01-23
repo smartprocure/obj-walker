@@ -969,13 +969,24 @@ describe('flatten', () => {
   test('should flatten array', () => {
     const arr = [10, 20, { a: { b: 20, c: 30, d: [40, { e: { f: 50 } }] } }]
     const result = flatten(arr)
-    const result2 = flatten(arr, { objectsOnly: true })
+    expect(result).toEqual({
+      '0': 10,
+      '1': 20,
+      '2.a.b': 20,
+      '2.a.c': 30,
+      '2.a.d.0': 40,
+      '2.a.d.1.e.f': 50,
+    })
+  })
+  test('should flatten array with objectsOnly set to true', () => {
+    const arr = [10, 20, { a: { b: 20, c: 30, d: [40, { e: { f: 50 } }] } }]
+    const result = flatten(arr, { objectsOnly: true })
+    console.dir(result, { depth: 10 })
     expect(result).toEqual([
       10,
       20,
       { 'a.b': 20, 'a.c': 30, 'a.d': [40, { 'e.f': 50 }] },
     ])
-    expect(result).toEqual(result2)
   })
   test('should flatten object with objectsOnly set to true', () => {
     const obj = {
