@@ -75,7 +75,7 @@ export type MapInternal = (
 ) => object
 
 export interface FlattenOptions {
-  /** Defaults to `.` */
+  /** Defaults to '.' */
   separator?: string
   /** Flatten objects and not arrays */
   objectsOnly?: boolean
