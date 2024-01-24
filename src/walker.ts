@@ -331,6 +331,7 @@ export const compact: Compact = (obj, options) => {
   const remove = buildCompactFilter(options)
   const mapper = (node: Node) => {
     let { val } = node
+    // Call remove on all array elements if compactArrays option is set
     if (options.compactArrays && Array.isArray(val)) {
       val = _.remove(remove, val)
     }

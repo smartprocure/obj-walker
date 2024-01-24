@@ -1158,7 +1158,7 @@ describe('compact', () => {
       d: 42,
       e: ['null'],
     }
-    const result = compact(obj, { removeFn: (x: any) => x === 'null' })
+    const result = compact(obj, { removeFn: (val: any) => val === 'null' })
     expect(result).toEqual({ a: {}, d: 42, e: ['null'] })
   })
   test('should remove empty object', () => {
@@ -1232,7 +1232,7 @@ describe('compact', () => {
         f: {
           g: '',
           h: undefined,
-          i: 'null'
+          i: 'null',
         },
       },
     }
@@ -1243,7 +1243,7 @@ describe('compact', () => {
       compactArrays: true,
       removeEmptyArray: true,
       removeEmptyObject: true,
-      removeFn: (x: any) => x === 'null',
+      removeFn: (val: any) => val === 'null',
     })
     expect(result).toEqual({
       a: { b: [21, { b2: 26 }] },
