@@ -521,7 +521,7 @@ interface CompactOptions {
     removeEmptyObject?: boolean
     removeEmptyArray?: boolean
     compactArrays?: boolean
-    removeFn?: (val: any) => boolean
+    removeFn?: (val: any, node: Node) => boolean
 }
 ```
 
