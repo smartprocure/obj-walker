@@ -316,6 +316,9 @@ const buildCompactFilter = (options: CompactOptions) => {
   if (options.removeEmptyArray) {
     fns.push(_.overEvery([_.isArray, _.isEmpty]))
   }
+  if(options.removeFn) {
+    fns.push(options.removeFn)
+  }
   return _.overSome(fns)
 }
 
