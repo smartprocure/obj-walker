@@ -1,3 +1,7 @@
+# 1.10.0
+
+- Added `removeFn` to `compact` for arbitrary removal.
+
 # 1.9.0
 
 - Added `objectsOnly` option to `flatten`.

@@ -1149,6 +1149,48 @@ describe('compact', () => {
     const result = compact(obj, { removeNaN: true })
     expect(result).toEqual({ a: {}, d: 42, e: [NaN] })
   })
+  test('should remove using remove fn', () => {
+    const obj = {
+      a: {
+        b: 'null',
+      },
+      c: 'null',
+      d: 42,
+      e: ['null'],
+    }
+    const result = compact(obj, { removeFn: (val: any) => val === 'null' })
+    expect(result).toEqual({ a: {}, d: 42, e: ['null'] })
+  })
+  test('should remove using remove fn based on second param', () => {
+    const obj = {
+      a: {
+        b: 'null',
+      },
+      c: 'null',
+    }
+    const result = compact(obj, {
+      removeFn: (_val: any, node: Node) => _.isEqual(node.path, ['a', 'b']),
+    })
+    expect(result).toEqual({ a: {}, c: 'null' })
+  })
+  test('should remove array elem using remove fn based on second param', () => {
+    const obj = {
+      joe: {
+        grades: [90, 85, 92],
+      },
+      bob: {
+        grades: [89, 87, 94],
+      },
+    }
+    const result = compact(obj, {
+      removeFn: (_val: any, node: Node) => node.key === '0',
+      compactArrays: true,
+    })
+    expect(result).toEqual({
+      joe: { grades: [85, 92] },
+      bob: { grades: [87, 94] },
+    })
+  })
   test('should remove empty object', () => {
     const obj = {
       a: {
@@ -1220,6 +1262,7 @@ describe('compact', () => {
         f: {
           g: '',
           h: undefined,
+          i: 'null',
         },
       },
     }
@@ -1230,6 +1273,7 @@ describe('compact', () => {
       compactArrays: true,
       removeEmptyArray: true,
       removeEmptyObject: true,
+      removeFn: (val: any) => val === 'null',
     })
     expect(result).toEqual({
       a: { b: [21, { b2: 26 }] },

@@ -462,6 +462,15 @@ Produces:
 flatten(obj: object, options?: WalkOptions & FlattenOptions) => object
 ```
 
+```typescript
+interface FlattenOptions {
+    /** Defaults to '.' */
+    separator?: string
+    /** Flatten objects and not arrays */
+    objectsOnly?: boolean
+}
+```
+
 Flatten an object's keys. Optionally pass `separator` to determine
 what character to join keys with. Defaults to '.'. If an array is
 passed, an object of path to values is returned unless the `objectsOnly`
@@ -512,6 +521,7 @@ interface CompactOptions {
     removeEmptyObject?: boolean
     removeEmptyArray?: boolean
     compactArrays?: boolean
+    removeFn?: (val: any, node: Node) => boolean
 }
 ```
 
@@ -530,6 +540,7 @@ const obj = {
         f: {
             g: '',
             h: undefined,
+            i: 'null',
         },
     },
 }
@@ -540,6 +551,7 @@ const result = compact(obj, {
     compactArrays: true,
     removeEmptyArray: true,
     removeEmptyObject: true,
+    removeFn: (val: any) => val === 'null',
 })
 ```
 

@@ -293,7 +293,7 @@ export const flatten: Flatten = (obj, options = {}) => {
 }
 
 const buildCompactFilter = (options: CompactOptions) => {
-  const fns: ((x: any) => boolean)[] = []
+  const fns: ((x: any, node: Node) => boolean)[] = []
 
   if (options.removeUndefined) {
     fns.push(_.isUndefined)
@@ -316,8 +316,13 @@ const buildCompactFilter = (options: CompactOptions) => {
   if (options.removeEmptyArray) {
     fns.push(_.overEvery([_.isArray, _.isEmpty]))
   }
+  if (options.removeFn) {
+    fns.push(options.removeFn)
+  }
   return _.overSome(fns)
 }
+
+const TOMBSTONE = Symbol('TOMBSTONE')
 
 /**
  * Compact an object, removing fields recursively according to the supplied options.
@@ -328,10 +333,17 @@ export const compact: Compact = (obj, options) => {
   const remove = buildCompactFilter(options)
   const mapper = (node: Node) => {
     let { val } = node
+    // Remove all tombstone values
     if (options.compactArrays && Array.isArray(val)) {
-      val = _.remove(remove, val)
+      val = _.remove((x) => x === TOMBSTONE, val)
     }
-    if (parentIsArray(node) || !remove(val)) {
+    if (parentIsArray(node)) {
+      if (options.compactArrays && remove(val, node)) {
+        return TOMBSTONE
+      }
+      return val
+    }
+    if (!remove(val, node)) {
       return val
     }
   }
