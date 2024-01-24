@@ -540,6 +540,7 @@ const obj = {
         f: {
             g: '',
             h: undefined,
+            i: 'null',
         },
     },
 }
@@ -550,6 +551,7 @@ const result = compact(obj, {
     compactArrays: true,
     removeEmptyArray: true,
     removeEmptyObject: true,
+    removeFn: (val: any) => val === 'null',
 })
 ```
 
