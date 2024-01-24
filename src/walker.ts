@@ -322,6 +322,8 @@ const buildCompactFilter = (options: CompactOptions) => {
   return _.overSome(fns)
 }
 
+const TOMBSTONE = Symbol('TOMBSTONE')
+
 /**
  * Compact an object, removing fields recursively according to the supplied options.
  * All option flags are `false` by default. If `compactArrays` is set to `true`, arrays
@@ -331,11 +333,17 @@ export const compact: Compact = (obj, options) => {
   const remove = buildCompactFilter(options)
   const mapper = (node: Node) => {
     let { val } = node
-    // Call remove on all array elements if compactArrays option is set
+    // Remove all tombstone values
     if (options.compactArrays && Array.isArray(val)) {
-      val = _.remove((x) => remove(x, node), val)
+      val = _.remove((x) => x === TOMBSTONE, val)
     }
-    if (parentIsArray(node) || !remove(val, node)) {
+    if (parentIsArray(node)) {
+      if (options.compactArrays && remove(val, node)) {
+        return TOMBSTONE
+      }
+      return val
+    }
+    if (!remove(val, node)) {
       return val
     }
   }

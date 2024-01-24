@@ -1173,6 +1173,24 @@ describe('compact', () => {
     })
     expect(result).toEqual({ a: {}, c: 'null' })
   })
+  test('should remove array elem using remove fn based on second param', () => {
+    const obj = {
+      joe: {
+        grades: [90, 85, 92],
+      },
+      bob: {
+        grades: [89, 87, 94],
+      },
+    }
+    const result = compact(obj, {
+      removeFn: (_val: any, node: Node) => node.key === '0',
+      compactArrays: true,
+    })
+    expect(result).toEqual({
+      joe: { grades: [85, 92] },
+      bob: { grades: [87, 94] },
+    })
+  })
   test('should remove empty object', () => {
     const obj = {
       a: {

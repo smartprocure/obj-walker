@@ -95,7 +95,6 @@ export interface CompactOptions {
   removeEmptyObject?: boolean
   removeEmptyArray?: boolean
   compactArrays?: boolean
-  /** Note: node will be the array node when compactArrays is true and not the array element */
   removeFn?: (val: any, node: Node) => boolean
 }
 
