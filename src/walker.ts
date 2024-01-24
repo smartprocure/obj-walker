@@ -293,7 +293,7 @@ export const flatten: Flatten = (obj, options = {}) => {
 }
 
 const buildCompactFilter = (options: CompactOptions) => {
-  const fns: ((x: any) => boolean)[] = []
+  const fns: ((x: any, node: Node) => boolean)[] = []
 
   if (options.removeUndefined) {
     fns.push(_.isUndefined)
@@ -316,7 +316,7 @@ const buildCompactFilter = (options: CompactOptions) => {
   if (options.removeEmptyArray) {
     fns.push(_.overEvery([_.isArray, _.isEmpty]))
   }
-  if(options.removeFn) {
+  if (options.removeFn) {
     fns.push(options.removeFn)
   }
   return _.overSome(fns)
@@ -333,9 +333,9 @@ export const compact: Compact = (obj, options) => {
     let { val } = node
     // Call remove on all array elements if compactArrays option is set
     if (options.compactArrays && Array.isArray(val)) {
-      val = _.remove(remove, val)
+      val = _.remove((x) => remove(x, node), val)
     }
-    if (parentIsArray(node) || !remove(val)) {
+    if (parentIsArray(node) || !remove(val, node)) {
       return val
     }
   }

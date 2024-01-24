@@ -1161,6 +1161,18 @@ describe('compact', () => {
     const result = compact(obj, { removeFn: (val: any) => val === 'null' })
     expect(result).toEqual({ a: {}, d: 42, e: ['null'] })
   })
+  test('should remove using remove fn based on second param', () => {
+    const obj = {
+      a: {
+        b: 'null',
+      },
+      c: 'null',
+    }
+    const result = compact(obj, {
+      removeFn: (_val: any, node: Node) => _.isEqual(node.path, ['a', 'b']),
+    })
+    expect(result).toEqual({ a: {}, c: 'null' })
+  })
   test('should remove empty object', () => {
     const obj = {
       a: {
