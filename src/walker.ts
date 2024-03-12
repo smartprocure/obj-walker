@@ -351,9 +351,10 @@ export const compact: Compact = (obj, options) => {
 }
 
 /**
- * Truncate an object replacing nested objects at depth greater
- * than the max specified depth with `replaceWith`. Replace text Defaults
- * to `[Truncated]`.
+ * Truncate allows you to limit the depth of nested objects/arrays,
+ * the length of strings, and the length of arrays. Instances of Error
+ * can be converted to plain objects so that the enabled truncation options
+ * also apply to the error fields. All truncation methods are opt-in.
  *
  * Note: For the best performance you should consider setting `modifyInPlace`
  * to `true`.
@@ -361,21 +362,25 @@ export const compact: Compact = (obj, options) => {
  * Inspiration: https://github.com/runk/dtrim
  */
 export const truncate: Truncate = (obj, options) => {
-  const depth = options.depth
-  const stringLength = options.stringLength || Infinity
-  const arrayLength = options.arrayLength || Infinity
-  const replaceWith =
-    'replaceWith' in options ? options.replaceWith : '[Truncated]'
+  const depth = options.maxDepth || Infinity
+  const stringLength = options.maxStringLength || Infinity
+  const arrayLength = options.maxArrayLength || Infinity
+  const replacementAtMaxDepth =
+    'replacementAtMaxDepth' in options
+      ? options.replacementAtMaxDepth
+      : '[Truncated]'
+  const replacementAtMaxStringLength =
+    options.replacementAtMaxStringLength ?? '...'
   return map(
     obj,
     (node) => {
       const { path, val, isLeaf } = node
       // Max depth reached
       if (!isLeaf && path.length === depth) {
-        return replaceWith
+        return replacementAtMaxDepth
       }
       // Transform Error to plain object
-      if (val instanceof Error) {
+      if (options.transformErrors && val instanceof Error) {
         return {
           message: val.message,
           name: val.name,
@@ -385,7 +390,7 @@ export const truncate: Truncate = (obj, options) => {
       }
       // String exceeds max length
       if (typeof val === 'string' && val.length > stringLength) {
-        return `${val.slice(0, stringLength)}...`
+        return `${val.slice(0, stringLength)}${replacementAtMaxStringLength}`
       }
       // Array exceeds max length
       if (Array.isArray(val) && val.length > arrayLength) {
@@ -395,4 +400,53 @@ export const truncate: Truncate = (obj, options) => {
     },
     options
   )
+}
+
+const ECMA_SIZES = {
+  STRING: 2,
+  BOOLEAN: 4,
+  BYTES: 4,
+  NUMBER: 8,
+  Int8Array: 1,
+  Uint8Array: 1,
+  Uint8ClampedArray: 1,
+  Int16Array: 2,
+  Uint16Array: 2,
+  Int32Array: 4,
+  Uint32Array: 4,
+  Float32Array: 4,
+  Float64Array: 8,
+}
+
+/**
+ * Inspiration: https://github.com/miktam/sizeof
+ */
+const getSize = (value: any): number => {
+  if (typeof value === 'boolean') {
+    return ECMA_SIZES.BYTES
+  } else if (typeof value === 'string') {
+    return value.length * ECMA_SIZES.STRING
+  } else if (typeof value === 'number') {
+    return ECMA_SIZES.NUMBER
+  } else if (typeof value === 'symbol' && value.description) {
+    return value.description.length * ECMA_SIZES.STRING
+  } else if (typeof value === 'bigint') {
+    // NOTE: There is no accurate way to get the actual byte size for bigint
+    // https://stackoverflow.com/a/54298760/1242923
+    return ECMA_SIZES.NUMBER
+  }
+  return 0
+}
+
+/**
+ * Estimate the size of an object in bytes.
+ */
+export const size = (obj: object) => {
+  let size = 0
+  walker(obj, ({ isLeaf, val }) => {
+    if (isLeaf) {
+      size += getSize(val)
+    }
+  })
+  return size
 }

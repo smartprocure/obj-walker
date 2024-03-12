@@ -1,3 +1,8 @@
+# 2.0.0
+
+- Changed API for `truncate` in order to make it more flexible.
+- Added `size` for estimating the size in bytes of an object.
+
 # 1.10.0
 
 - Added `removeFn` to `compact` for arbitrary removal.
