@@ -363,9 +363,9 @@ export const compact: Compact = (obj, options) => {
  * Inspiration: https://github.com/runk/dtrim
  */
 export const truncate: Truncate = (obj, options) => {
-  const depth = options.maxDepth || Infinity
-  const stringLength = options.maxStringLength || Infinity
-  const arrayLength = options.maxArrayLength || Infinity
+  const maxDepth = options.maxDepth || Infinity
+  const maxStringLength = options.maxStringLength || Infinity
+  const maxArrayLength = options.maxArrayLength || Infinity
   const replacementAtMaxDepth =
     'replacementAtMaxDepth' in options
       ? options.replacementAtMaxDepth
@@ -377,7 +377,7 @@ export const truncate: Truncate = (obj, options) => {
     (node) => {
       const { path, val, isLeaf } = node
       // Max depth reached
-      if (!isLeaf && path.length === depth) {
+      if (!isLeaf && path.length === maxDepth) {
         return replacementAtMaxDepth
       }
       // Transform Error to plain object
@@ -390,12 +390,12 @@ export const truncate: Truncate = (obj, options) => {
         }
       }
       // String exceeds max length
-      if (typeof val === 'string' && val.length > stringLength) {
-        return `${val.slice(0, stringLength)}${replacementAtMaxStringLength}`
+      if (typeof val === 'string' && val.length > maxStringLength) {
+        return `${val.slice(0, maxStringLength)}${replacementAtMaxStringLength}`
       }
       // Array exceeds max length
-      if (Array.isArray(val) && val.length > arrayLength) {
-        return val.slice(0, arrayLength)
+      if (Array.isArray(val) && val.length > maxArrayLength) {
+        return val.slice(0, maxArrayLength)
       }
       return val
     },
