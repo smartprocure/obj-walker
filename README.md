@@ -632,10 +632,10 @@ Produces:
 ## size
 
 ```typescript
-size(obj: object) => number
+size(val: any) => number
 ```
 
-Estimate the size of an object in bytes.
+Estimate the size in bytes.
 
 ```typescript
 const obj = {

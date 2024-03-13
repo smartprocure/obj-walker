@@ -1510,6 +1510,14 @@ describe('size', () => {
     const result = size(obj)
     expect(result).toBe(44)
   })
+  test('should handle scalar value', () => {
+    const result = size('hello')
+    expect(result).toBe(10)
+  })
+  test('should handle top-level array', () => {
+    const result = size(['joe', 'frank'])
+    expect(result).toBe(16)
+  })
   test('should return 0 bytes if there are no leaf nodes', () => {
     const obj = {
       a: {

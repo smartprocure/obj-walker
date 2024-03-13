@@ -406,18 +406,18 @@ export const truncate: Truncate = (obj, options) => {
 /**
  * Inspiration: https://github.com/miktam/sizeof
  */
-const getSize = (value: any): number => {
-  if (typeof value === 'boolean') {
+const getSize = (val: any): number => {
+  if (typeof val === 'boolean') {
     return ECMA_SIZES.BYTES
-  } else if (typeof value === 'string') {
+  } else if (typeof val === 'string') {
     // Strings are encoded using UTF-16
-    return value.length * ECMA_SIZES.STRING
-  } else if (typeof value === 'number') {
+    return val.length * ECMA_SIZES.STRING
+  } else if (typeof val === 'number') {
     // Numbers are 64-bit
     return ECMA_SIZES.NUMBER
-  } else if (typeof value === 'symbol' && value.description) {
-    return value.description.length * ECMA_SIZES.STRING
-  } else if (typeof value === 'bigint') {
+  } else if (typeof val === 'symbol' && val.description) {
+    return val.description.length * ECMA_SIZES.STRING
+  } else if (typeof val === 'bigint') {
     // NOTE: There is no accurate way to get the actual byte size for bigint
     // https://stackoverflow.com/a/54298760/1242923
     return ECMA_SIZES.NUMBER
@@ -426,14 +426,17 @@ const getSize = (value: any): number => {
 }
 
 /**
- * Estimate the size of an object in bytes.
+ * Estimate the size in bytes.
  */
-export const size = (obj: object) => {
-  let size = 0
-  walker(obj, ({ isLeaf, val }) => {
-    if (isLeaf) {
-      size += getSize(val)
-    }
-  })
-  return size
+export const size = (val: any) => {
+  if (isObjectOrArray(val)) {
+    let bytes = 0
+    walker(val, ({ isLeaf, val }) => {
+      if (isLeaf) {
+        bytes += getSize(val)
+      }
+    })
+    return bytes
+  }
+  return getSize(val)
 }

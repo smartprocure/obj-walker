@@ -1,3 +1,7 @@
+# 2.1.0
+
+-   Added handling of top-level scalar values to `size`.
+
 # 2.0.0
 
 -   BREAKING CHANGE: Changed API for `truncate` in order to make it more flexible.
