@@ -1510,4 +1510,13 @@ describe('size', () => {
     const result = size(obj)
     expect(result).toBe(44)
   })
+  test('should return 0 bytes if there are no leaf nodes', () => {
+    const obj = {
+      a: {
+        b: {},
+      },
+    }
+    const result = size(obj)
+    expect(result).toBe(0)
+  })
 })

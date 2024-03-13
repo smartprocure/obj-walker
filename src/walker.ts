@@ -410,8 +410,10 @@ const getSize = (value: any): number => {
   if (typeof value === 'boolean') {
     return ECMA_SIZES.BYTES
   } else if (typeof value === 'string') {
+    // Strings are encoded using UTF-16
     return value.length * ECMA_SIZES.STRING
   } else if (typeof value === 'number') {
+    // Numbers are 64-bit
     return ECMA_SIZES.NUMBER
   } else if (typeof value === 'symbol' && value.description) {
     return value.description.length * ECMA_SIZES.STRING
