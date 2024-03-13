@@ -1415,7 +1415,7 @@ describe('truncate', () => {
       },
     })
   })
-  test('should truncate long strings', () => {
+  test('should truncate strings', () => {
     const obj = {
       a: {
         b: '1234567890',
@@ -1427,7 +1427,7 @@ describe('truncate', () => {
     const result = truncate(obj, { maxStringLength: 5 })
     expect(result).toEqual({ a: { b: '12345...' }, c: '123', d: 42, e: null })
   })
-  test('should truncate long strings with custom replacement text', () => {
+  test('should truncate strings with custom replacement text', () => {
     const obj = {
       a: {
         b: '1234567890',
@@ -1442,7 +1442,7 @@ describe('truncate', () => {
     })
     expect(result).toEqual({ a: { b: '12345' }, c: '123', d: 42, e: null })
   })
-  test('should truncate long arrays', () => {
+  test('should truncate arrays', () => {
     const obj = {
       a: [1, 2, 3, 4, 5],
       c: '123',
