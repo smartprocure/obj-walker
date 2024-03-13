@@ -1,15 +1,15 @@
 # 2.0.0
 
-- Changed API for `truncate` in order to make it more flexible.
-- Added `size` for estimating the size in bytes of an object.
+-   BREAKING CHANGE: Changed API for `truncate` in order to make it more flexible.
+-   Added `size` for estimating the size in bytes of an object.
 
 # 1.10.0
 
-- Added `removeFn` to `compact` for arbitrary removal.
+-   Added `removeFn` to `compact` for arbitrary removal.
 
 # 1.9.0
 
-- Added `objectsOnly` option to `flatten`.
+-   Added `objectsOnly` option to `flatten`.
 
 # 1.8.0
 
