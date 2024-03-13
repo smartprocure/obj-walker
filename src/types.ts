@@ -104,7 +104,7 @@ export type Compact = (
 ) => object
 
 export interface TruncateOptions {
-  /** Max allowed depth of objects/arrays. Default to Infinity */
+  /** Max allowed depth of objects/arrays. Defaults to Infinity */
   maxDepth?: number
   /** What to replace an object/array at the maximum depth with. Defaults to '[Truncated]' */
   replacementAtMaxDepth?: any
