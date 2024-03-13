@@ -31,3 +31,22 @@ export const getRoot = (obj: object, jsonCompat = false): Node => {
     ? { key: '', val: obj, parents: [{ '': obj }], ...rootCommon }
     : { key: undefined, val: obj, parents: [], ...rootCommon }
 }
+
+/**
+ * Size in bytes
+ */
+export const ECMA_SIZES = {
+  STRING: 2,
+  BOOLEAN: 4,
+  BYTES: 4,
+  NUMBER: 8,
+  Int8Array: 1,
+  Uint8Array: 1,
+  Uint8ClampedArray: 1,
+  Int16Array: 2,
+  Uint16Array: 2,
+  Int32Array: 4,
+  Uint32Array: 4,
+  Float32Array: 4,
+  Float64Array: 8,
+}

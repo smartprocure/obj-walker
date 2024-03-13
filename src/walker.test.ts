@@ -12,6 +12,7 @@ import {
   truncate,
   walkieAsync,
   SHORT_CIRCUIT,
+  size,
 } from './walker'
 import { parentIsArray } from './util'
 import { Node } from './types'
@@ -1306,7 +1307,7 @@ describe('truncate', () => {
       d: 42,
       e: null,
     }
-    const result = truncate(obj, { depth: 1 })
+    const result = truncate(obj, { maxDepth: 1 })
     expect(result).toEqual({
       a: '[Truncated]',
       c: 'Bob',
@@ -1327,7 +1328,7 @@ describe('truncate', () => {
       },
       f: 42,
     }
-    const result = truncate(obj, { depth: 2 })
+    const result = truncate(obj, { maxDepth: 2 })
     expect(result).toEqual({
       a: {
         b: 'Frank',
@@ -1348,7 +1349,7 @@ describe('truncate', () => {
       },
       f: 42,
     }
-    const result = truncate(obj, { depth: 4 })
+    const result = truncate(obj, { maxDepth: 4 })
     expect(result).toEqual({
       a: { b: 'Frank', c: { d: ['Bob', '[Truncated]', 'Tom'] }, e: null },
       f: 42,
@@ -1363,7 +1364,7 @@ describe('truncate', () => {
       d: 42,
       e: null,
     }
-    const result = truncate(obj, { depth: 1, replaceWith: null })
+    const result = truncate(obj, { maxDepth: 1, replacementAtMaxDepth: null })
     expect(result).toEqual({
       a: null,
       c: 'Bob',
@@ -1380,7 +1381,7 @@ describe('truncate', () => {
       d: 42,
       e: null,
     }
-    const result = truncate(obj, { depth: 1, modifyInPlace: true })
+    const result = truncate(obj, { maxDepth: 1, modifyInPlace: true })
     expect(result).toEqual({
       a: '[Truncated]',
       c: 'Bob',
@@ -1405,7 +1406,7 @@ describe('truncate', () => {
     const obj = {
       error,
     }
-    const result = truncate(obj, { depth: 5 })
+    const result = truncate(obj, { maxDepth: 5, transformErrors: true })
     expect(result).toMatchObject({
       error: {
         message: 'failure',
@@ -1414,7 +1415,7 @@ describe('truncate', () => {
       },
     })
   })
-  test('should truncate long strings', () => {
+  test('should truncate strings', () => {
     const obj = {
       a: {
         b: '1234567890',
@@ -1423,22 +1424,99 @@ describe('truncate', () => {
       d: 42,
       e: null,
     }
-    const result = truncate(obj, { depth: 5, stringLength: 5 })
+    const result = truncate(obj, { maxStringLength: 5 })
     expect(result).toEqual({ a: { b: '12345...' }, c: '123', d: 42, e: null })
   })
-  test('should truncate long arrays', () => {
+  test('should truncate strings with custom replacement text', () => {
+    const obj = {
+      a: {
+        b: '1234567890',
+      },
+      c: '123',
+      d: 42,
+      e: null,
+    }
+    const result = truncate(obj, {
+      maxStringLength: 5,
+      replacementAtMaxStringLength: '',
+    })
+    expect(result).toEqual({ a: { b: '12345' }, c: '123', d: 42, e: null })
+  })
+  test('should truncate arrays', () => {
     const obj = {
       a: [1, 2, 3, 4, 5],
       c: '123',
       d: [1, 2],
       e: null,
     }
-    const result = truncate(obj, { depth: 5, arrayLength: 3 })
+    const result = truncate(obj, { maxArrayLength: 3 })
     expect(result).toEqual({
       a: [1, 2, 3],
       c: '123',
       d: [1, 2],
       e: null,
     })
+  })
+})
+
+describe('size', () => {
+  test('should return number of bytes for strings', () => {
+    const obj = {
+      a: {
+        b: 'hello',
+      },
+    }
+    const result = size(obj)
+    expect(result).toBe(10)
+  })
+  test('should return number of bytes for symbols', () => {
+    const obj = {
+      a: {
+        b: Symbol('hello'),
+      },
+    }
+    const result = size(obj)
+    expect(result).toBe(10)
+  })
+  test('should return number of bytes for booleans', () => {
+    const obj = {
+      a: {
+        b: [true, false],
+      },
+    }
+    const result = size(obj)
+    expect(result).toBe(8)
+  })
+  test('should return number of bytes for numbers', () => {
+    const obj = {
+      a: {
+        b: [42, 10n],
+      },
+    }
+    const result = size(obj)
+    expect(result).toBe(16)
+  })
+  test('should return number of bytes for mixed types', () => {
+    const obj = {
+      a: {
+        b: 'hello',
+      },
+      c: Symbol('hello'),
+      d: {
+        e: [true, false]
+      },
+      f: [42, 10n]
+    }
+    const result = size(obj)
+    expect(result).toBe(44)
+  })
+  test('should return 0 bytes if there are no leaf nodes', () => {
+    const obj = {
+      a: {
+        b: {},
+      },
+    }
+    const result = size(obj)
+    expect(result).toBe(0)
   })
 })

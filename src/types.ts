@@ -104,13 +104,18 @@ export type Compact = (
 ) => object
 
 export interface TruncateOptions {
-  depth: number
-  /** Defaults to [Truncated] */
-  replaceWith?: any
-  /** Max length of a string. Default to Infinity. */
-  stringLength?: number
-  /** Max length of an array */
-  arrayLength?: number
+  /** Max allowed depth of objects/arrays. Defaults to Infinity */
+  maxDepth?: number
+  /** What to replace an object/array at the maximum depth with. Defaults to '[Truncated]' */
+  replacementAtMaxDepth?: any
+  /** Max allowed length of a string. Defaults to Infinity */
+  maxStringLength?: number
+  /** What to replace the last characters of the truncated string with. Defaults to '...' */
+  replacementAtMaxStringLength?: string
+  /** Max allowed length of an array. Defaults to Infinity */
+  maxArrayLength?: number
+  /** Transform instances of Error into plain objects so that truncation can be performed. Defaults to false */
+  transformErrors?: boolean
 }
 
 export type Truncate = (

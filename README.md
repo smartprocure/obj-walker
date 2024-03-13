@@ -20,6 +20,13 @@ logical way. Prefer `walkie` in these scenarios.
 `map`, `walkie`, `walkieAsync`, `mapLeaves`, `compact`, and `truncate` support
 the option `modifyInPlace` for in-place modification. Otherwise, the object is deep cloned.
 
+```typescript
+export interface MutationOption {
+    /** Set to true to modify the object instead of returning a new object. */
+    modifyInPlace?: boolean
+}
+```
+
 ## walker
 
 ```typescript
@@ -155,7 +162,7 @@ Produces:
 ## walkie
 
 ```typescript
-walkie(obj: object, walkFn: WalkFn, options: WalkOptions = {}) => object
+walkie(obj: object, walkFn: WalkFn, options: options?: WalkOptions & MutationOption) => object
 ```
 
 ```typescript
@@ -261,7 +268,7 @@ Undefined array values will not be excluded. To customize
 pass a fn for `options.shouldSkip`.
 
 ```typescript
-map(obj: object, mapper: Mapper, options: MapOptions = {}) => object
+map(obj: object, mapper: Mapper, options?: MapOptions & MutationOption) => object
 ```
 
 ```typescript
@@ -508,7 +515,7 @@ Produces:
 ## compact
 
 ```typescript
-compact(obj: object, options: CompactOptions) => object
+compact(obj: object, options: CompactOptions & MutationOption) => object
 ```
 
 ```typescript
@@ -567,19 +574,33 @@ Produces:
 ## truncate
 
 ```typescript
-truncate(obj: object, options: TruncateOptions) => object
+truncate(obj: object, options: TruncateOptions & MutationOption) => object
 ```
 
 ```typescript
-interface TruncateOptions {
-    depth: number
-    replaceWith?: any
+export interface TruncateOptions {
+    /** Max allowed depth of objects/arrays. Default to Infinity */
+    maxDepth?: number
+    /** What to replace an object/array at the maximum depth with. Defaults to '[Truncated]' */
+    replacementAtMaxDepth?: any
+    /** Max allowed length of a string. Defaults to Infinity */
+    maxStringLength?: number
+    /** What to replace the last characters of the truncated string with. Defaults to '...' */
+    replacementAtMaxStringLength?: string
+    /** Max allowed length of an array. Defaults to Infinity */
+    maxArrayLength?: number
+    /** Transform instances of Error into plain objects so that truncation can be performed. Defautls to false */
+    transformErrors?: boolean
 }
 ```
 
-Truncate an object replacing nested objects at depth greater
-than the max specified depth with `replaceWith`. Replace text Defaults
-to `[Truncated]`.
+Truncate allows you to limit the depth of nested objects/arrays,
+the length of strings, and the length of arrays. Instances of Error
+can be converted to plain objects so that the enabled truncation options
+also apply to the error fields. All truncation methods are opt-in.
+
+Note: For the best performance you should consider setting `modifyInPlace`
+to `true`.
 
 ```typescript
 const obj = {
@@ -606,6 +627,29 @@ Produces:
   },
   f: 42,
 }
+```
+
+## size
+
+```typescript
+size(obj: object) => number
+```
+
+Estimate the size of an object in bytes.
+
+```typescript
+const obj = {
+    a: {
+        b: 'hello',
+    },
+    c: Symbol('hello'),
+    d: {
+        e: [true, false],
+    },
+    f: [42, 10n],
+}
+size(obj)
+// 44
 ```
 
 ## Helper fns
