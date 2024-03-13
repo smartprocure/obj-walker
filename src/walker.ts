@@ -364,12 +364,12 @@ export const compact: Compact = (obj, options) => {
  */
 export const truncate: Truncate = (obj, options) => {
   const maxDepth = options.maxDepth || Infinity
-  const maxStringLength = options.maxStringLength || Infinity
-  const maxArrayLength = options.maxArrayLength || Infinity
   const replacementAtMaxDepth =
     'replacementAtMaxDepth' in options
       ? options.replacementAtMaxDepth
       : '[Truncated]'
+  const maxArrayLength = options.maxArrayLength || Infinity
+  const maxStringLength = options.maxStringLength || Infinity
   const replacementAtMaxStringLength =
     options.replacementAtMaxStringLength ?? '...'
   return map(
@@ -379,6 +379,10 @@ export const truncate: Truncate = (obj, options) => {
       // Max depth reached
       if (!isLeaf && path.length === maxDepth) {
         return replacementAtMaxDepth
+      }
+      // Array exceeds max length
+      if (Array.isArray(val) && val.length > maxArrayLength) {
+        return val.slice(0, maxArrayLength)
       }
       // Transform Error to plain object
       if (options.transformErrors && val instanceof Error) {
@@ -392,10 +396,6 @@ export const truncate: Truncate = (obj, options) => {
       // String exceeds max length
       if (typeof val === 'string' && val.length > maxStringLength) {
         return `${val.slice(0, maxStringLength)}${replacementAtMaxStringLength}`
-      }
-      // Array exceeds max length
-      if (Array.isArray(val) && val.length > maxArrayLength) {
-        return val.slice(0, maxArrayLength)
       }
       return val
     },
