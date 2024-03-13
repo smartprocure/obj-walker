@@ -114,7 +114,7 @@ export interface TruncateOptions {
   replacementAtMaxStringLength?: string
   /** Max allowed length of an array. Defaults to Infinity */
   maxArrayLength?: number
-  /** Transform instances of Error into plain objects so that truncation can be performed. Defautls to false */
+  /** Transform instances of Error into plain objects so that truncation can be performed. Defaults to false */
   transformErrors?: boolean
 }
 
