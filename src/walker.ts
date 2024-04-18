@@ -12,10 +12,11 @@ import {
   NextNode,
   CompactOptions,
   Truncate,
-  Walkie,
-  WalkieAsync,
+  WalkEach,
+  WalkEachAsync,
   Walker,
   MutationOption,
+  Unflatten,
 } from './types'
 import {
   isObjectOrArray,
@@ -77,7 +78,6 @@ export const walker: Walker = (obj, walkFn, options = {}) => {
     if (postOrder) {
       if (shouldShortCircuit(walkFn(node))) {
         shortCircuit = true
-        return
       }
     }
   }
@@ -183,14 +183,12 @@ export const walk: Walk = (obj, options = {}) => {
 }
 
 /**
- * Walk-each ~ walkie
- *
  * Walk over an object calling `walkFn` for each node. The original
  * object is deep-cloned by default making it possible to simply mutate each
  * node as needed in order to transform the object. The cloned object
  * is returned if `options.modifyInPlace` is not set to true.
  */
-export const walkie: Walkie = (obj, walkFn, options = {}) => {
+export const walkEach: WalkEach = (obj, walkFn, options = {}) => {
   if (!options.modifyInPlace) {
     obj = _.cloneDeep(obj)
   }
@@ -199,10 +197,19 @@ export const walkie: Walkie = (obj, walkFn, options = {}) => {
 }
 
 /**
- * Like `walkie` but awaits the promise returned by `walkFn` before proceeding to
+ * @deprecated Use walkEach
+ */
+export const walkie = walkEach
+
+/**
+ * Like `walkEach` but awaits the promise returned by `walkFn` before proceeding to
  * the next node.
  */
-export const walkieAsync: WalkieAsync = async (obj, walkFn, options = {}) => {
+export const walkEachAsync: WalkEachAsync = async (
+  obj,
+  walkFn,
+  options = {}
+) => {
   if (!options.modifyInPlace) {
     obj = _.cloneDeep(obj)
   }
@@ -212,6 +219,11 @@ export const walkieAsync: WalkieAsync = async (obj, walkFn, options = {}) => {
   }
   return obj
 }
+
+/**
+ * @deprecated Use walkEachAsync
+ */
+export const walkieAsync = walkEachAsync
 
 /**
  * Map over the leaves of an object with a fn. By default, nodes will be excluded
@@ -283,7 +295,7 @@ const chunkPath = (path: string[], separator: string) => {
 export const flatten: Flatten = (obj, options = {}) => {
   const nodes = walk(obj, { ...options, leavesOnly: true })
   const separator = options.separator || '.'
-  const result: any = Array.isArray(obj) && options.objectsOnly ? [] : {}
+  const result: object = Array.isArray(obj) && options.objectsOnly ? [] : {}
   for (const node of nodes) {
     const path = options.objectsOnly
       ? chunkPath(node.path, separator)
@@ -291,6 +303,22 @@ export const flatten: Flatten = (obj, options = {}) => {
     set(result, path, node.val)
   }
   return result
+}
+
+/**
+ * Unflatten an object previously flattened. Optionally pass `separator`
+ * to determine what character or RegExp to split keys with.
+ * Defaults to '.'.
+ */
+export const unflatten: Unflatten = (obj, options = {}) => {
+  const separator = options.separator || '.'
+  return map(obj, ({ val }) => {
+    if (_.isPlainObject(val)) {
+      const keyPaths = Object.keys(val).map((key) => key.split(separator))
+      return _.zipObjectDeep(keyPaths, Object.values(val))
+    }
+    return val
+  })
 }
 
 const buildCompactFilter = (options: CompactOptions) => {
