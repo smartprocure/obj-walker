@@ -1,5 +1,5 @@
 import { decycle, retrocycle } from 'json-decycle'
-import { walkie, map } from './walker'
+import { walkEach, map } from './walker'
 import { Node, RefOptions } from './types'
 
 /**
@@ -22,5 +22,5 @@ export const deref = (obj: object, options?: RefOptions) => {
   const walkFn = ({ parents, key, val }: Node) => {
     fn.call(parents[0], key ?? '', val)
   }
-  return walkie(obj, walkFn, { ...options, postOrder: true, jsonCompat: true })
+  return walkEach(obj, walkFn, { ...options, postOrder: true, jsonCompat: true })
 }

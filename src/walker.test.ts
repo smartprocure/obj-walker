@@ -4,15 +4,16 @@ import {
   flatten,
   walker,
   walk,
-  walkie,
+  walkEach,
   map,
   mapLeaves,
   findNode,
   compact,
   truncate,
-  walkieAsync,
+  walkEachAsync,
   SHORT_CIRCUIT,
   size,
+  unflatten,
 } from './walker'
 import { parentIsArray } from './util'
 import { Node } from './types'
@@ -567,7 +568,7 @@ describe('findNode', () => {
   })
 })
 
-describe('walkie', () => {
+describe('walkEach', () => {
   test('mutate a tree', () => {
     const obj = {
       bsonType: 'object',
@@ -604,7 +605,7 @@ describe('walkie', () => {
         val.additionalProperties = true
       }
     }
-    const newObj = walkie(obj, walkFn, { traverse })
+    const newObj = walkEach(obj, walkFn, { traverse })
     // Objects are not the same
     expect(obj).not.toBe(newObj)
     // additionalProperties set to true recursively
@@ -642,7 +643,7 @@ describe('walkie', () => {
       frank: { scores: [96, 86, 91, 84] },
       tom: null,
     }
-    const result = walkie(
+    const result = walkEach(
       obj,
       ({ val }) => {
         if (_.isPlainObject(val) && 'scores' in val) {
@@ -661,7 +662,7 @@ describe('walkie', () => {
   })
 })
 
-describe('walkieAsync', () => {
+describe('walkEachAsync', () => {
   test('should await walkFn', async () => {
     const obj = {
       joe: { scores: [90, 80, 75, 95] },
@@ -669,7 +670,7 @@ describe('walkieAsync', () => {
       frank: { scores: [96, 86, 91, 84] },
       tom: null,
     }
-    const result = await walkieAsync(obj, async ({ val }) => {
+    const result = await walkEachAsync(obj, async ({ val }) => {
       if (_.isPlainObject(val) && 'scores' in val) {
         val.avg = _.sum(val.scores) / val.scores.length
       }
@@ -998,7 +999,7 @@ describe('flatten', () => {
       '2.a.d.1.e.f': 50,
     })
   })
-  test('should flatten array with objectsOnly set to true', () => {
+  test('should preserve top-level array with objectsOnly set to true', () => {
     const arr = [10, 20, { a: { b: 20, c: 30, d: [40, { e: { f: 50 } }] } }]
     const result = flatten(arr, { objectsOnly: true })
     expect(result).toEqual([
@@ -1083,6 +1084,83 @@ describe('flatten', () => {
       addresses_items_isPrimary: { bsonType: 'bool' },
       integrations_stripe_priceId: { bsonType: 'string' },
       integrations_stripe_subscriptionStatus: { bsonType: 'string' },
+    })
+  })
+})
+
+describe('unflatten', () => {
+  test('should unflatten object with object and array paths', () => {
+    const obj = {
+      'a.b': 23,
+      'a.c': 24,
+      'd.e': 100,
+      'd.f.0': 10,
+      'd.f.1': 20,
+      'd.f.2.g': 30,
+      'd.f.2.h.i': 40,
+    }
+    const result = unflatten(obj)
+    expect(result).toEqual({
+      a: {
+        b: 23,
+        c: 24,
+      },
+      d: {
+        e: 100,
+        f: [10, 20, { g: 30, h: { i: 40 } }],
+      },
+    })
+  })
+  test('should unflatten object with custom separator', () => {
+    const obj = {
+      a_b: 23,
+      a_c: 24,
+      d_e: 100,
+      d_f_0: 10,
+      d_f_1: 20,
+      d_f_2_g: 30,
+      d_f_2_h_i: 40,
+    }
+    const result = unflatten(obj, { separator: '_' })
+    expect(result).toEqual({
+      a: {
+        b: 23,
+        c: 24,
+      },
+      d: {
+        e: 100,
+        f: [10, 20, { g: 30, h: { i: 40 } }],
+      },
+    })
+  })
+  test('should unflatten a nested array/object', () => {
+    const arr = [10, 20, { 'a.b': 20, 'a.c': 30, 'a.d': [40, { 'e.f': 50 }] }]
+    const result = unflatten(arr)
+    expect(result).toEqual([
+      10,
+      20,
+      { a: { b: 20, c: 30, d: [40, { e: { f: 50 } }] } },
+    ])
+  })
+  test('should preserve a non-flattened object', () => {
+    const obj = {
+      a: {
+        b: {
+          c: 10,
+          d: 20,
+        },
+        e: [30],
+      },
+    }
+    const result = unflatten(obj)
+    expect(result).toEqual({
+      a: {
+        b: {
+          c: 10,
+          d: 20,
+        },
+        e: [30],
+      },
     })
   })
 })
@@ -1503,9 +1581,9 @@ describe('size', () => {
       },
       c: Symbol('hello'),
       d: {
-        e: [true, false]
+        e: [true, false],
       },
-      f: [42, 10n]
+      f: [42, 10n],
     }
     const result = size(obj)
     expect(result).toBe(44)

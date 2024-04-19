@@ -1,3 +1,9 @@
+# 2.2.0
+
+-   Added `unflatten` to compliment `flatten`.
+-   Deprecated `walkie`. Use `walkEach`.
+-   Deprecated `walkieAsync`. Use `walkEachAsync`.
+
 # 2.1.0
 
 -   Added handling of top-level scalar values to `size`.

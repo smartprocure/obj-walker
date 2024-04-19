@@ -15,9 +15,9 @@ option to `true`.
 
 Custom traversal functions are supported for some functions. This allows you
 to walk tree-like structures, such as a JSON schema, in a more efficient and
-logical way. Prefer `walkie` in these scenarios.
+logical way. Prefer `walkEach` in these scenarios.
 
-`map`, `walkie`, `walkieAsync`, `mapLeaves`, `compact`, and `truncate` support
+`map`, `walkEach`, `walkEachAsync`, `mapLeaves`, `compact`, and `truncate` support
 the option `modifyInPlace` for in-place modification. Otherwise, the object is deep cloned.
 
 ```typescript
@@ -159,17 +159,15 @@ Produces:
 ]
 ```
 
-## walkie
+## walkEach
 
 ```typescript
-walkie(obj: object, walkFn: WalkFn, options: options?: WalkOptions & MutationOption) => object
+walkEach(obj: object, walkFn: WalkFn, options: options?: WalkOptions & MutationOption) => object
 ```
 
 ```typescript
 export type WalkFn = (node: Node) => void
 ```
-
-Walk-each ~ walkie
 
 Walk over an object calling `walkFn` for each node. The original
 object is deep-cloned by default making it possible to simply mutate each
@@ -181,7 +179,7 @@ wherever it exists. I traverse this tree using a custom `traverse` fn.
 The original object is not modified.
 
 ```typescript
-import { walkie } from 'obj-walker'
+import { walkEach } from 'obj-walker'
 
 const obj = {
     bsonType: 'object',
@@ -218,7 +216,7 @@ const walkFn = ({ val }: Node) => {
         val.additionalProperties = true
     }
 }
-walkie(obj, walkFn, { traverse })
+walkEach(obj, walkFn, { traverse })
 ```
 
 Produces:
@@ -252,9 +250,9 @@ Produces:
 }
 ```
 
-## walkieAsync
+## walkEachAsync
 
-Like `walkie` but awaits the promise returned by `walkFn` before proceeding to
+Like `walkEach` but awaits the promise returned by `walkFn` before proceeding to
 the next node.
 
 ## map
@@ -509,6 +507,53 @@ Produces:
   'd.f.0': 10,
   'd.f.1': 20,
   'd.f.2': 30,
+}
+```
+
+## unflatten
+
+```typescript
+unflatten(obj: object, options?: UnflattenOptions) => object
+```
+
+```typescript
+interface UnflattenOptions {
+    /** Defaults to '.' */
+    separator?: string | RegExp
+}
+```
+
+Unflatten an object previously flattened. Optionally pass `separator`
+to determine what character or RegExp to split keys with.
+Defaults to '.'.
+
+```typescript
+import { unflatten } from 'obj-walker'
+
+const obj = {
+    'a.b': 23,
+    'a.c': 24,
+    'd.e': 100,
+    'd.f.0': 10,
+    'd.f.1': 20,
+    'd.f.2.g': 30,
+    'd.f.2.h.i': 40,
+}
+unflatten(obj)
+```
+
+Produces:
+
+```typescript
+{
+  a: {
+    b: 23,
+    c: 24,
+  },
+  d: {
+    e: 100,
+    f: [10, 20, { g: 30, h: { i: 40 } }],
+  },
 }
 ```
 

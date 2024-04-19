@@ -44,13 +44,13 @@ export type Walker = (obj: object, walkFn: WalkFn, options?: Options) => void
 
 export type Walk = (obj: object, options?: WalkOptions) => Node[]
 
-export type Walkie = (
+export type WalkEach = (
   obj: object,
   walkFn: WalkFn,
   options?: WalkOptions & MutationOption
 ) => object
 
-export type WalkieAsync = (
+export type WalkEachAsync = (
   obj: object,
   walkFn: AsyncWalkFn,
   options?: WalkOptions & MutationOption
@@ -85,6 +85,13 @@ export type Flatten = (
   obj: object,
   options?: WalkOptions & FlattenOptions
 ) => object
+
+export interface UnflattenOptions {
+  /** Defaults to '.' */
+  separator?: string | RegExp
+}
+
+export type Unflatten = (obj: object, options?: UnflattenOptions) => object
 
 export interface CompactOptions {
   removeUndefined?: boolean
