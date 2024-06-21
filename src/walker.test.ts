@@ -795,33 +795,23 @@ describe('map', () => {
       ...person,
       ageGroup: person.name.endsWith('y') ? 'young' : 'old',
     })
-    expect(
-      map<PersonWithAge>(
-        obj,
-        (node) => {
-          const { val } = node
-          return guessAgeGroup(val)
-        },
-        {
-          filterFn: (val) => {
-            return Boolean(val?.name)
-          },
-        }
-      )
-    ).toEqual({
-      properties: {
-        name: { type: 'string' },
-        addresses: {
-          properties: {
-            address: {
-              properties: {
-                zip: { type: 'string' },
-                country: { type: 'string' },
-              },
-            },
-          },
-        },
+    const result = map<PersonWithAge>(
+      obj,
+      (node) => {
+        const { val } = node
+        return guessAgeGroup(val)
       },
+      {
+        filterFn: (val) => _.has('name', val),
+      }
+    )
+    expect(result).toEqual({
+      name: 'Joe',
+      children: [
+        { name: 'Bobby', children: [], ageGroup: 'young' },
+        { name: 'Timmy', children: [], ageGroup: 'young' },
+      ],
+      ageGroup: 'old',
     })
   })
   test('postorder', () => {
@@ -984,7 +974,9 @@ describe('mapLeaves', () => {
         f: [10, 20, 30],
       },
     }
-    const result = mapLeaves(obj, ({ val }) => val + 1, { modifyInPlace: true })
+    const result = mapLeaves(obj, ({ val }) => (val as number) + 1, {
+      modifyInPlace: true,
+    })
     expect(obj).toBe(result)
     expect(result).toEqual({
       a: { b: 24, c: 25 },

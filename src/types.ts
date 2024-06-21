@@ -1,6 +1,6 @@
-export interface Node<T = any> {
+export interface Node {
   key: string | undefined
-  val: T
+  val: any
   parents: any[]
   path: string[]
   isLeaf: boolean
@@ -115,8 +115,8 @@ export interface TruncateOptions {
 }
 
 export type Truncate = (
-  obj: any,
+  obj: unknown,
   options: TruncateOptions & MutationOption
-) => object
+) => unknown
 
 export type RequiredFields<T, K extends keyof T> = T & Required<Pick<T, K>>

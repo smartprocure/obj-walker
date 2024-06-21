@@ -86,7 +86,7 @@ export const walker: Walker = (obj, walkFn, options = {}) => {
 }
 
 function mapPre<T>(
-  obj: any,
+  obj: object,
   mapper: Mapper<T>,
   options: RequiredFields<MapOptions, 'shouldSkip' | 'jsonCompat'>
 ) {
@@ -97,14 +97,14 @@ function mapPre<T>(
   // Recursively walk object
   const _walk = (node: Node): void => {
     const { isRoot, path, val } = node
-    const newVal = filterFn?.(val, node) ? mapper(node) : val
+    const newVal = !filterFn || filterFn(val, node) ? mapper(node) : val
     // Should skip value
     if (shouldSkip(newVal, node)) {
       unset(obj, path)
       return
     }
     if (isRoot) {
-      obj = newVal
+      obj = newVal as object
     } else {
       set(obj, path, newVal)
     }
@@ -118,7 +118,7 @@ function mapPre<T>(
 }
 
 function mapPost<T>(
-  obj: any,
+  obj: object,
   mapper: Mapper<T>,
   options: RequiredFields<MapOptions, 'shouldSkip' | 'jsonCompat'>
 ) {
@@ -133,7 +133,7 @@ function mapPost<T>(
         return
       }
       if (isRoot) {
-        obj = newVal
+        obj = newVal as unknown as object
       } else {
         set(obj, path, newVal)
       }
@@ -145,6 +145,7 @@ function mapPost<T>(
 
 function setMapDefaults(options: MapOptions & MutationOption) {
   return {
+    ...options,
     postOrder: options.postOrder ?? false,
     jsonCompat: options.jsonCompat ?? false,
     modifyInPlace: options.modifyInPlace ?? false,
@@ -162,7 +163,7 @@ function setMapDefaults(options: MapOptions & MutationOption) {
  * pass a fn for `options.shouldSkip`.
  */
 export function map<T>(
-  obj: any,
+  obj: unknown,
   mapper: Mapper<T>,
   options: MapOptions & MutationOption = {}
 ) {
@@ -170,13 +171,12 @@ export function map<T>(
     return obj
   }
   const opts = setMapDefaults(options)
-  if (!opts.modifyInPlace) {
-    obj = _.cloneDeep(obj)
-  }
+  const newObj = !opts.modifyInPlace ? _.cloneDeep(obj) : obj
+
   if (options.postOrder) {
-    return mapPost<T>(obj, mapper, opts)
+    return mapPost<T>(newObj, mapper, opts)
   }
-  return mapPre<T>(obj, mapper, opts)
+  return mapPre<T>(newObj, mapper, opts)
 }
 
 /**
@@ -331,12 +331,12 @@ export const flatten: Flatten = (obj, options = {}) => {
 export const unflatten: Unflatten = (obj, options = {}) => {
   const separator = options.separator || '.'
   return map(obj, ({ val }) => {
-    if (_.isPlainObject(val)) {
+    if (val && typeof val === 'object' && _.isPlainObject(val)) {
       const keyPaths = Object.keys(val).map((key) => key.split(separator))
       return _.zipObjectDeep(keyPaths, Object.values(val))
     }
     return val
-  })
+  }) as object
 }
 
 const buildCompactFilter = (options: CompactOptions) => {
@@ -394,7 +394,7 @@ export const compact: Compact = (obj, options) => {
       return val
     }
   }
-  return map(obj, mapper, { ...options, postOrder: true })
+  return map(obj, mapper, { ...options, postOrder: true }) as object
 }
 
 /**

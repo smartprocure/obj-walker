@@ -4,7 +4,12 @@ import { Node } from './types'
 /**
  * Is the value a plain object or an array?
  */
-export const isObjectOrArray = _.overSome([_.isPlainObject, _.isArray])
+export const isObjectOrArray = (x: unknown): x is object | Array<any> => {
+  if ((x && typeof x === 'object') || Array.isArray(x)) {
+    return true
+  }
+  return false
+}
 
 /**
  * Skip if the value is undefined and the node's parent is not array.
