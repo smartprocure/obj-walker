@@ -776,6 +776,54 @@ describe('map', () => {
       },
     })
   })
+  test('preorder - filterFn', () => {
+    interface Person {
+      name: string
+      children: Person[]
+    }
+    interface PersonWithAge extends Person {
+      ageGroup: 'young' | 'old'
+    }
+    const obj: Person = {
+      name: 'Joe',
+      children: [
+        { name: 'Bobby', children: [] },
+        { name: 'Timmy', children: [] },
+      ],
+    }
+    const guessAgeGroup = (person: Person): PersonWithAge => ({
+      ...person,
+      ageGroup: person.name.endsWith('y') ? 'young' : 'old',
+    })
+    expect(
+      map<PersonWithAge>(
+        obj,
+        (node) => {
+          const { val } = node
+          return guessAgeGroup(val)
+        },
+        {
+          filterFn: (val) => {
+            return Boolean(val?.name)
+          },
+        }
+      )
+    ).toEqual({
+      properties: {
+        name: { type: 'string' },
+        addresses: {
+          properties: {
+            address: {
+              properties: {
+                zip: { type: 'string' },
+                country: { type: 'string' },
+              },
+            },
+          },
+        },
+      },
+    })
+  })
   test('postorder', () => {
     const obj = {
       bob: {
@@ -918,7 +966,7 @@ describe('mapLeaves', () => {
         f: [10, 20, 30],
       },
     }
-    const result = mapLeaves(obj, ({ val }) => val + 1)
+    const result = mapLeaves(obj, ({ val }) => (val as number) + 1)
     expect(obj).toEqual(obj)
     expect(result).toEqual({
       a: { b: 24, c: 25 },

@@ -2,11 +2,10 @@ import { set, unset } from 'lodash'
 import _ from 'lodash/fp'
 import {
   Compact,
-  Map,
   Node,
+  Mapper,
   MapOptions,
   Walk,
-  MapInternal,
   FindNode,
   Flatten,
   NextNode,
@@ -17,6 +16,7 @@ import {
   Walker,
   MutationOption,
   Unflatten,
+  RequiredFields,
 } from './types'
 import {
   isObjectOrArray,
@@ -85,15 +85,19 @@ export const walker: Walker = (obj, walkFn, options = {}) => {
   _walk(getRoot(obj, jsonCompat))
 }
 
-const mapPre: MapInternal = (obj, mapper, options) => {
+function mapPre<T>(
+  obj: any,
+  mapper: Mapper<T>,
+  options: RequiredFields<MapOptions, 'shouldSkip' | 'jsonCompat'>
+) {
   const traverse = defTraverse
-  const { jsonCompat, shouldSkip } = options
+  const { jsonCompat, shouldSkip, filterFn } = options
   // A leaf is a node that can't be traversed
   const isLeaf = _.negate(traverse)
   // Recursively walk object
   const _walk = (node: Node): void => {
-    const { isRoot, path } = node
-    const newVal = mapper(node)
+    const { isRoot, path, val } = node
+    const newVal = filterFn?.(val, node) ? mapper(node) : val
     // Should skip value
     if (shouldSkip(newVal, node)) {
       unset(obj, path)
@@ -113,7 +117,11 @@ const mapPre: MapInternal = (obj, mapper, options) => {
   return obj
 }
 
-const mapPost: MapInternal = (obj, mapper, options) => {
+function mapPost<T>(
+  obj: any,
+  mapper: Mapper<T>,
+  options: RequiredFields<MapOptions, 'shouldSkip' | 'jsonCompat'>
+) {
   walker(
     obj,
     (node) => {
@@ -135,12 +143,14 @@ const mapPost: MapInternal = (obj, mapper, options) => {
   return obj
 }
 
-const setMapDefaults = (options: MapOptions & MutationOption) => ({
-  postOrder: options.postOrder ?? false,
-  jsonCompat: options.jsonCompat ?? false,
-  modifyInPlace: options.modifyInPlace ?? false,
-  shouldSkip: options.shouldSkip ?? defShouldSkip,
-})
+function setMapDefaults(options: MapOptions & MutationOption) {
+  return {
+    postOrder: options.postOrder ?? false,
+    jsonCompat: options.jsonCompat ?? false,
+    modifyInPlace: options.modifyInPlace ?? false,
+    shouldSkip: options.shouldSkip ?? defShouldSkip,
+  }
+}
 
 /**
  * Map over an object modifying values with a fn depth-first in a
@@ -151,7 +161,11 @@ const setMapDefaults = (options: MapOptions & MutationOption) => ({
  * Undefined array values will not be excluded. To customize
  * pass a fn for `options.shouldSkip`.
  */
-export const map: Map = (obj, mapper, options = {}) => {
+export function map<T>(
+  obj: any,
+  mapper: Mapper<T>,
+  options: MapOptions & MutationOption = {}
+) {
   if (!isObjectOrArray(obj)) {
     return obj
   }
@@ -160,9 +174,9 @@ export const map: Map = (obj, mapper, options = {}) => {
     obj = _.cloneDeep(obj)
   }
   if (options.postOrder) {
-    return mapPost(obj, mapper, opts)
+    return mapPost<T>(obj, mapper, opts)
   }
-  return mapPre(obj, mapper, opts)
+  return mapPre<T>(obj, mapper, opts)
 }
 
 /**
@@ -230,7 +244,11 @@ export const walkieAsync = walkEachAsync
  * by returning `undefined`. Undefined array values will not be excluded. To customize
  * pass a fn for `options.shouldSkip`.
  */
-export const mapLeaves: Map = (obj, mapper, options = {}) => {
+export function mapLeaves<T>(
+  obj: any,
+  mapper: Mapper<T>,
+  options: MapOptions & MutationOption = {}
+) {
   if (!isObjectOrArray(obj)) {
     return obj
   }

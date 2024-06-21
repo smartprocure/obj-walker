@@ -25,7 +25,7 @@ export const parentIsArray = (node: Node) => {
  */
 export const defTraverse = (x: any) => isObjectOrArray(x) && !_.isEmpty(x) && x
 
-export const getRoot = (obj: object, jsonCompat = false): Node => {
+export const getRoot = (obj: any, jsonCompat = false): Node => {
   const rootCommon = { path: [], isLeaf: false, isRoot: true }
   return jsonCompat
     ? { key: '', val: obj, parents: [{ '': obj }], ...rootCommon }

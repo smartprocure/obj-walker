@@ -1,6 +1,6 @@
-export interface Node {
+export interface Node<T = any> {
   key: string | undefined
-  val: any
+  val: T
   parents: any[]
   path: string[]
   isLeaf: boolean
@@ -31,6 +31,7 @@ export interface MutationOption {
 
 export type MapOptions = Omit<Options, 'traverse'> & {
   shouldSkip?(val: any, node: Node): boolean
+  filterFn?(val: any, node: Node): boolean
 }
 
 export type RefOptions = Pick<Options, 'traverse'>
@@ -38,7 +39,7 @@ export type RefOptions = Pick<Options, 'traverse'>
 export type WalkFn = (node: Node) => void
 export type AsyncWalkFn = (node: Node) => void | Promise<void>
 export type FindFn = (node: Node) => boolean
-export type Mapper = (node: Node) => any
+export type Mapper<T> = (node: Node) => T
 
 export type Walker = (obj: object, walkFn: WalkFn, options?: Options) => void
 
@@ -56,23 +57,11 @@ export type WalkEachAsync = (
   options?: WalkOptions & MutationOption
 ) => Promise<object>
 
-export type Map = (
-  obj: object,
-  mapper: Mapper,
-  options?: MapOptions & MutationOption
-) => object
-
 export type FindNode = (
   obj: object,
   findFn: FindFn,
   options?: Options
 ) => Node | undefined
-
-export type MapInternal = (
-  obj: object,
-  mapper: Mapper,
-  options: Required<MapOptions>
-) => object
 
 export interface FlattenOptions {
   /** Defaults to '.' */
@@ -126,6 +115,8 @@ export interface TruncateOptions {
 }
 
 export type Truncate = (
-  obj: object,
+  obj: any,
   options: TruncateOptions & MutationOption
 ) => object
+
+export type RequiredFields<T, K extends keyof T> = T & Required<Pick<T, K>>
