@@ -31,6 +31,7 @@ export interface MutationOption {
 
 export type MapOptions = Omit<Options, 'traverse'> & {
   shouldSkip?(val: any, node: Node): boolean
+  /** Filter which nodes to map over. Only applicable for preorder traversal. */
   filterFn?(val: any, node: Node): boolean
 }
 
