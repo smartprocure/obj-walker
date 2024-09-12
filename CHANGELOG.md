@@ -1,6 +1,7 @@
 # 2.3.0
 
 -   `truncate` - Added the ability to pass a function for the `replacementAtMaxStringLength` option.
+-   Bumped deps and migrated to Vite.
 
 # 2.2.0
 

@@ -1,4 +1,5 @@
 import _ from 'lodash/fp'
+
 import { Node } from './types'
 
 /**

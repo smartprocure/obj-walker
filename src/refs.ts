@@ -1,6 +1,7 @@
 import { decycle, retrocycle } from 'json-decycle'
-import { walkEach, map } from './walker'
+
 import { Node, RefOptions } from './types'
+import { map, walkEach } from './walker'
 
 /**
  * Replace duplicate objects refs with pointers to the first
@@ -22,5 +23,9 @@ export const deref = (obj: object, options?: RefOptions) => {
   const walkFn = ({ parents, key, val }: Node) => {
     fn.call(parents[0], key ?? '', val)
   }
-  return walkEach(obj, walkFn, { ...options, postOrder: true, jsonCompat: true })
+  return walkEach(obj, walkFn, {
+    ...options,
+    postOrder: true,
+    jsonCompat: true,
+  })
 }

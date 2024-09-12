@@ -1,22 +1,23 @@
 import _ from 'lodash/fp'
-import { describe, expect, test } from '@jest/globals'
+import { describe, expect, test } from 'vitest'
+
+import { Node } from './types'
+import { parentIsArray } from './util'
 import {
+  compact,
+  findNode,
   flatten,
-  walker,
-  walk,
-  walkEach,
   map,
   mapLeaves,
-  findNode,
-  compact,
-  truncate,
-  walkEachAsync,
   SHORT_CIRCUIT,
   size,
+  truncate,
   unflatten,
+  walk,
+  walkEach,
+  walkEachAsync,
+  walker,
 } from './walker'
-import { parentIsArray } from './util'
-import { Node } from './types'
 
 describe('walker', () => {
   test('remove empty elements from an array (nested)', () => {
@@ -1534,7 +1535,12 @@ describe('truncate', () => {
       replacementAtMaxStringLength: (input: string) =>
         ` [Length: ${input.length}]`,
     })
-    expect(result).toEqual({ a: { b: '12345 [Length: 10]' }, c: '123', d: 42, e: null })
+    expect(result).toEqual({
+      a: { b: '12345 [Length: 10]' },
+      c: '123',
+      d: 42,
+      e: null,
+    })
   })
   test('should truncate arrays', () => {
     const obj = {
