@@ -1520,6 +1520,22 @@ describe('truncate', () => {
     })
     expect(result).toEqual({ a: { b: '12345' }, c: '123', d: 42, e: null })
   })
+  test('should truncate strings with custom replacement function', () => {
+    const obj = {
+      a: {
+        b: '1234567890',
+      },
+      c: '123',
+      d: 42,
+      e: null,
+    }
+    const result = truncate(obj, {
+      maxStringLength: 5,
+      replacementAtMaxStringLength: (input: string) =>
+        ` [Length: ${input.length}]`,
+    })
+    expect(result).toEqual({ a: { b: '12345 [Length: 10]' }, c: '123', d: 42, e: null })
+  })
   test('should truncate arrays', () => {
     const obj = {
       a: [1, 2, 3, 4, 5],

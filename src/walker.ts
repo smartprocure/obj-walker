@@ -423,7 +423,11 @@ export const truncate: Truncate = (obj, options) => {
       }
       // String exceeds max length
       if (typeof val === 'string' && val.length > maxStringLength) {
-        return `${val.slice(0, maxStringLength)}${replacementAtMaxStringLength}`
+        const replacement =
+          typeof replacementAtMaxStringLength === 'string'
+            ? replacementAtMaxStringLength
+            : replacementAtMaxStringLength(val)
+        return `${val.slice(0, maxStringLength)}${replacement}`
       }
       return val
     },

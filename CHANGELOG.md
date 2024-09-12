@@ -1,3 +1,7 @@
+# 2.3.0
+
+-   `truncate` - Added the ability to pass a function for the `replacementAtMaxStringLength` option.
+
 # 2.2.0
 
 -   Added `unflatten` to compliment `flatten`.
