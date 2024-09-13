@@ -1,6 +1,6 @@
 {
   "name": "obj-walker",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Walk or map over objects in a depth-first preorder or postorder manner.",
   "author": "David Sargeant",
   "repository": "git://github.com/smartprocure/obj-walker.git",
@@ -11,7 +11,8 @@
     "clean": "rm -rf dist",
     "build": "npm run clean && tsc --declaration",
     "build:watch": "tsc --watch",
-    "test": "jest",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint src/**"
   },
   "keywords": [
@@ -45,21 +46,24 @@
   "prettier": {
     "semi": false,
     "singleQuote": true,
-    "trailingComma": "es5"
+    "trailingComma": "es5",
+    "plugins": ["@trivago/prettier-plugin-sort-imports"],
+    "importOrder": ["^[./]"],
+    "importOrderSortSpecifiers": true,
+    "importOrderCaseInsensitive": true,
+    "importOrderSeparation": true
   },
   "dependencies": {
     "json-decycle": "^2.0.1",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "@types/jest": "^27.5.1",
-    "@types/lodash": "^4.14.182",
-    "@typescript-eslint/eslint-plugin": "^5.26.0",
-    "eslint": "^8.16.0",
-    "jest": "^28.1.0",
-    "prettier": "^3.2.5",
-    "ts-jest": "^28.0.3",
-    "ts-node": "^10.8.0",
-    "typescript": "^4.7.2"
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
+    "@types/lodash": "^4.17.7",
+    "@types/node": "^22.5.4",
+    "@typescript-eslint/eslint-plugin": "^8.5.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.0"
   }
 }

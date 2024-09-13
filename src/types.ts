@@ -110,6 +110,8 @@ export type Compact = (
   options: CompactOptions & MutationOption
 ) => object
 
+export type StringReplacementFn = (input: string) => string
+
 export interface TruncateOptions {
   /** Max allowed depth of objects/arrays. Defaults to Infinity */
   maxDepth?: number
@@ -118,7 +120,7 @@ export interface TruncateOptions {
   /** Max allowed length of a string. Defaults to Infinity */
   maxStringLength?: number
   /** What to replace the last characters of the truncated string with. Defaults to '...' */
-  replacementAtMaxStringLength?: string
+  replacementAtMaxStringLength?: string | StringReplacementFn
   /** Max allowed length of an array. Defaults to Infinity */
   maxArrayLength?: number
   /** Transform instances of Error into plain objects so that truncation can be performed. Defaults to false */
