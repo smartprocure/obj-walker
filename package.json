@@ -1,6 +1,6 @@
 {
   "name": "obj-walker",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Walk or map over objects in a depth-first preorder or postorder manner.",
   "author": "David Sargeant",
   "repository": "git://github.com/smartprocure/obj-walker.git",
@@ -54,16 +54,18 @@
     "importOrderSeparation": true
   },
   "dependencies": {
+    "debug": "^4.3.7",
     "json-decycle": "^2.0.1",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
+    "@types/debug": "^4.1.12",
     "@types/lodash": "^4.17.7",
-    "@types/node": "^22.5.4",
-    "@typescript-eslint/eslint-plugin": "^8.5.0",
+    "@types/node": "^22.5.5",
+    "@typescript-eslint/eslint-plugin": "^8.6.0",
     "prettier": "^3.3.3",
     "typescript": "^5.6.2",
-    "vitest": "^2.1.0"
+    "vitest": "^2.1.1"
   }
 }

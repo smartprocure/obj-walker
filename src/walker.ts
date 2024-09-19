@@ -1,3 +1,4 @@
+import _debug from 'debug'
 import { set, unset } from 'lodash'
 import _ from 'lodash/fp'
 
@@ -28,6 +29,11 @@ import {
   parentIsArray,
 } from './util'
 
+const debugTruncate = _debug('obj-walker:truncate')
+const debugMap = _debug('obj-walker:map')
+const debugCompact = _debug('obj-walker:compact')
+const debugWalker = _debug('obj-walker:walker')
+
 const nextNode: NextNode = (currentNode, entry, isLeaf) => {
   const [key, val] = entry
   const { val: currentVal, parents, path } = currentNode
@@ -56,6 +62,7 @@ const shouldShortCircuit = (x: any) => x === SHORT_CIRCUIT
  * Note: this is a low-level function and probably isn't what you want.
  */
 export const walker: Walker = (obj, walkFn, options = {}) => {
+  debugWalker('Options - %o', options)
   let shortCircuit = false
   const { postOrder, jsonCompat, traverse = defTraverse } = options
   // A leaf is a node that can't be traversed
@@ -66,6 +73,7 @@ export const walker: Walker = (obj, walkFn, options = {}) => {
     // Preorder
     if (!postOrder) {
       if (shouldShortCircuit(walkFn(node))) {
+        debugWalker('Short-circuit')
         shortCircuit = true
         return
       }
@@ -78,6 +86,7 @@ export const walker: Walker = (obj, walkFn, options = {}) => {
     // Postorder
     if (postOrder) {
       if (shouldShortCircuit(walkFn(node))) {
+        debugWalker('Short-circuit')
         shortCircuit = true
       }
     }
@@ -87,6 +96,7 @@ export const walker: Walker = (obj, walkFn, options = {}) => {
 }
 
 const mapPre: MapInternal = (obj, mapper, options) => {
+  debugMap('Preorder')
   const traverse = defTraverse
   const { jsonCompat, shouldSkip } = options
   // A leaf is a node that can't be traversed
@@ -97,6 +107,7 @@ const mapPre: MapInternal = (obj, mapper, options) => {
     const newVal = mapper(node)
     // Should skip value
     if (shouldSkip(newVal, node)) {
+      debugMap('Skipping - %o', newVal)
       unset(obj, path)
       return
     }
@@ -115,6 +126,7 @@ const mapPre: MapInternal = (obj, mapper, options) => {
 }
 
 const mapPost: MapInternal = (obj, mapper, options) => {
+  debugMap('Postorder')
   walker(
     obj,
     (node) => {
@@ -122,6 +134,7 @@ const mapPost: MapInternal = (obj, mapper, options) => {
       const newVal = mapper(node)
       // Should skip value
       if (options.shouldSkip(newVal, node)) {
+        debugMap('Skipping %o', newVal)
         unset(obj, path)
         return
       }
@@ -153,11 +166,14 @@ const setMapDefaults = (options: MapOptions & MutationOption) => ({
  * pass a fn for `options.shouldSkip`.
  */
 export const map: Map = (obj, mapper, options = {}) => {
+  debugMap('Options - %o', options)
   if (!isObjectOrArray(obj)) {
+    debugMap('Not object or array')
     return obj
   }
   const opts = setMapDefaults(options)
   if (!opts.modifyInPlace) {
+    debugMap('Deep clone')
     obj = _.cloneDeep(obj)
   }
   if (options.postOrder) {
@@ -365,10 +381,12 @@ export const compact: Compact = (obj, options) => {
     let { val } = node
     // Remove all tombstone values
     if (options.compactArrays && Array.isArray(val)) {
+      debugCompact('Remove tombstones')
       val = _.remove((x) => x === TOMBSTONE, val)
     }
     if (parentIsArray(node)) {
       if (options.compactArrays && remove(val, node)) {
+        debugCompact('Tombstone set')
         return TOMBSTONE
       }
       return val
@@ -379,6 +397,16 @@ export const compact: Compact = (obj, options) => {
   }
   return map(obj, mapper, { ...options, postOrder: true })
 }
+
+/**
+ * Transform an Error to a plain object.
+ */
+const transformError = (error: Error) => ({
+  message: error.message,
+  name: error.name,
+  ...(error.stack && { stack: error.stack }),
+  ..._.toPlainObject(error),
+})
 
 /**
  * Truncate allows you to limit the depth of nested objects/arrays,
@@ -401,29 +429,34 @@ export const truncate: Truncate = (obj, options) => {
   const maxStringLength = options.maxStringLength || Infinity
   const replacementAtMaxStringLength =
     options.replacementAtMaxStringLength ?? '...'
+
+  // Handle top-level Error object
+  if (options.transformErrors && obj instanceof Error) {
+    debugTruncate('Transforming top-level Error')
+    obj = transformError(obj)
+  }
   return map(
     obj,
     (node) => {
       const { path, val, isLeaf } = node
       // Max depth reached
       if (!isLeaf && path.length === maxDepth) {
+        debugTruncate('Max object depth reached - %d', maxDepth)
         return replacementAtMaxDepth
       }
       // Array exceeds max length
       if (Array.isArray(val) && val.length > maxArrayLength) {
+        debugTruncate('Max array length reached - %d', maxArrayLength)
         return val.slice(0, maxArrayLength)
       }
       // Transform Error to plain object
       if (options.transformErrors && val instanceof Error) {
-        return {
-          message: val.message,
-          name: val.name,
-          ...(val.stack && { stack: val.stack }),
-          ..._.toPlainObject(val),
-        }
+        debugTruncate('Transforming Error')
+        return transformError(val)
       }
       // String exceeds max length
       if (typeof val === 'string' && val.length > maxStringLength) {
+        debugTruncate('Max string length reached - %d', maxStringLength)
         const replacement =
           typeof replacementAtMaxStringLength === 'string'
             ? replacementAtMaxStringLength

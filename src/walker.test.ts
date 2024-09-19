@@ -1494,6 +1494,26 @@ describe('truncate', () => {
       },
     })
   })
+  test('should handle top-level Error', () => {
+    class ValidationError extends Error {
+      context: object
+      constructor(message: any, context: object) {
+        super(message)
+        this.name = 'ValidationError'
+        this.context = context
+      }
+    }
+    const context = { a: { b: { c: { d: 'missing' } } } }
+    const error = new ValidationError('failure', context)
+
+    const obj = error
+    const result = truncate(obj, { maxDepth: 4, transformErrors: true })
+    expect(result).toMatchObject({
+      message: 'failure',
+      name: 'ValidationError',
+      context: { a: { b: { c: '[Truncated]' } } },
+    })
+  })
   test('should truncate strings', () => {
     const obj = {
       a: {
