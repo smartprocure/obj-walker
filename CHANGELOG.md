@@ -1,3 +1,7 @@
+# 2.4.0
+
+-   `truncate` - Handle top-level Error.
+
 # 2.3.0
 
 -   `truncate` - Added the ability to pass a function for the `replacementAtMaxStringLength` option.
