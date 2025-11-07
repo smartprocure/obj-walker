@@ -5,6 +5,7 @@ import _ from 'lodash/fp'
 import {
   Compact,
   CompactOptions,
+  Exclude,
   FindNode,
   Flatten,
   Map,
@@ -505,4 +506,52 @@ export const size = (val: any) => {
     return bytes
   }
   return getSize(val)
+}
+
+/**
+ * Check if a path starts with a pattern prefix (with star wildcards).
+ * A star (*) matches any single field name.
+ */
+const pathMatchesPrefix = (path: string[], pattern: string[]): boolean => {
+  if (path.length < pattern.length) {
+    return false
+  }
+  for (let i = 0; i < pattern.length; i++) {
+    if (pattern[i] !== '*' && pattern[i] !== path[i]) {
+      return false
+    }
+  }
+  return true
+}
+
+/**
+ * Exclude paths from an object. Supports star patterns where '*' matches
+ * any single field name. For example, 'documents.*.fileName' will match
+ * 'documents.0.fileName', 'documents.1.fileName', etc.
+ *
+ * Also supports prefix matching: excluding 'documents' will exclude
+ * 'documents.fileName', 'documents.0.fileName', etc.
+ */
+export const exclude: Exclude = (obj, paths, options = {}) => {
+  if (!isObjectOrArray(obj)) {
+    return obj
+  }
+
+  // Parse path patterns (split by '.')
+  const patterns = paths.map((p) => p.split('.'))
+
+  const mapper = (node: Node) => {
+    const { path, val } = node
+
+    // Check if current path matches any exclude pattern (exact or prefix)
+    for (const pattern of patterns) {
+      if (pathMatchesPrefix(path, pattern)) {
+        return undefined
+      }
+    }
+
+    return val
+  }
+
+  return map(obj, mapper, { ...options, postOrder: true })
 }

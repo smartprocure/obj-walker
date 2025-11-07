@@ -131,3 +131,9 @@ export type Truncate = (
   obj: object,
   options: TruncateOptions & MutationOption
 ) => object
+
+export type Exclude = (
+  obj: object,
+  paths: string[],
+  options?: MutationOption
+) => object
