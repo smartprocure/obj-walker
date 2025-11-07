@@ -697,6 +697,44 @@ size(obj)
 // 44
 ```
 
+## exclude
+
+```typescript
+exclude(obj: object, paths: string[], options?: MutationOption) => object
+```
+
+Exclude paths from an object. Supports star patterns where `*` matches
+any single field name. For example, `documents.*.fileName` will match
+`documents.0.fileName`, `documents.1.fileName`, etc.
+
+Also supports prefix matching: excluding `documents` will exclude
+`documents.fileName`, `documents.0.fileName`, etc.
+
+```typescript
+import { exclude } from 'obj-walker'
+
+const obj = {
+    name: 'John',
+    age: 30,
+    documents: [
+        { fileName: 'doc1.pdf', size: 1024 },
+        { fileName: 'doc2.pdf', size: 2048 },
+    ],
+    address: { street: '123 Main St', city: 'New York' },
+}
+exclude(obj, ['documents.*.fileName', 'age'])
+```
+
+Produces:
+
+```typescript
+{
+  name: 'John',
+  documents: [{ size: 1024 }, { size: 2048 }],
+  address: { street: '123 Main St', city: 'New York' },
+}
+```
+
 ## Helper fns
 
 These helper fns are exported for your convenience.

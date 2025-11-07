@@ -5,6 +5,7 @@ import { Node } from './types'
 import { parentIsArray } from './util'
 import {
   compact,
+  exclude,
   findNode,
   flatten,
   map,
@@ -22,14 +23,8 @@ import {
 describe('walker', () => {
   test('remove empty elements from an array (nested)', () => {
     const obj = {
-      a: {
-        b: 23,
-        c: 24,
-      },
-      d: {
-        e: 'Bob',
-        f: [10, null, 30, [31, undefined, 32], 40],
-      },
+      a: { b: 23, c: 24 },
+      d: { e: 'Bob', f: [10, null, 30, [31, undefined, 32], 40] },
       g: [25, '', { h: [null, 26, 27] }],
       i: 'Frank',
     }
@@ -49,15 +44,7 @@ describe('walker', () => {
     })
   })
   test('should short-circuit', () => {
-    const obj = {
-      a: {
-        b: 23,
-        c: 24,
-        d: {
-          e: 25,
-        },
-      },
-    }
+    const obj = { a: { b: 23, c: 24, d: { e: 25 } } }
     let numNodesVisited = 0
     const walkFn = (node: Node) => {
       numNodesVisited++
@@ -73,16 +60,7 @@ describe('walker', () => {
 
 describe('walk', () => {
   test('walk with no options', () => {
-    const obj = {
-      a: {
-        b: 23,
-        c: 24,
-      },
-      d: {
-        e: 'Bob',
-        f: [10, 20, 30],
-      },
-    }
+    const obj = { a: { b: 23, c: 24 }, d: { e: 'Bob', f: [10, 20, 30] } }
     const result = walk(obj)
     expect(result).toEqual([
       {
@@ -192,16 +170,7 @@ describe('walk', () => {
     ])
   })
   test('walk preorder', () => {
-    const obj = {
-      a: {
-        b: 23,
-        c: 24,
-      },
-      d: {
-        e: 'Bob',
-        f: [10, 20, 30],
-      },
-    }
+    const obj = { a: { b: 23, c: 24 }, d: { e: 'Bob', f: [10, 20, 30] } }
     const result = walk(obj).map((x) => x.path)
     expect(result).toEqual([
       [],
@@ -217,16 +186,7 @@ describe('walk', () => {
     ])
   })
   test('walk postorder', () => {
-    const obj = {
-      a: {
-        b: 23,
-        c: 24,
-      },
-      d: {
-        e: 'Bob',
-        f: [10, 20, 30],
-      },
-    }
+    const obj = { a: { b: 23, c: 24 }, d: { e: 'Bob', f: [10, 20, 30] } }
     const result = walk(obj, { postOrder: true }).map((x) => x.path)
     expect(result).toEqual([
       ['a', 'b'],
@@ -247,9 +207,7 @@ describe('walk', () => {
       additionalProperties: false,
       required: ['name', 'type'],
       properties: {
-        _id: {
-          bsonType: 'objectId',
-        },
+        _id: { bsonType: 'objectId' },
         name: { bsonType: 'string' },
         numberOfEmployees: {
           bsonType: 'string',
@@ -286,12 +244,8 @@ describe('walk', () => {
               bsonType: 'object',
               additionalProperties: true,
               properties: {
-                priceId: {
-                  bsonType: 'string',
-                },
-                subscriptionStatus: {
-                  bsonType: 'string',
-                },
+                priceId: { bsonType: 'string' },
+                subscriptionStatus: { bsonType: 'string' },
               },
             },
           },
@@ -480,34 +434,22 @@ describe('walk', () => {
       joe: {
         age: 16,
         courses: {
-          math: {
-            scores: [95, 96, 87],
-          },
-          biology: {
-            scores: [97, 94, 87],
-          },
+          math: { scores: [95, 96, 87] },
+          biology: { scores: [97, 94, 87] },
         },
       },
       bob: {
         age: 16,
         courses: {
-          math: {
-            scores: [88, 87, 75],
-          },
-          biology: {
-            scores: [97, 94, 87],
-          },
+          math: { scores: [88, 87, 75] },
+          biology: { scores: [97, 94, 87] },
         },
       },
       frank: {
         age: 15,
         courses: {
-          math: {
-            scores: [90, 85, 73],
-          },
-          biology: {
-            scores: [89, 87, 73],
-          },
+          math: { scores: [90, 85, 73] },
+          biology: { scores: [89, 87, 73] },
         },
       },
     }
@@ -526,11 +468,7 @@ describe('walk', () => {
 describe('findNode', () => {
   const obj = {
     name: 'Joe',
-    address: {
-      city: 'New York',
-      state: 'NY',
-      zipCode: '10001',
-    },
+    address: { city: 'New York', state: 'NY', zipCode: '10001' },
     likes: ['Stock Market', 'Running'],
   }
   test('should find a node and short-circuit', () => {
@@ -576,9 +514,7 @@ describe('walkEach', () => {
       additionalProperties: false,
       required: ['name'],
       properties: {
-        _id: {
-          bsonType: 'objectId',
-        },
+        _id: { bsonType: 'objectId' },
         name: { bsonType: 'string' },
         addresses: {
           bsonType: 'array',
@@ -689,14 +625,8 @@ describe('walkEachAsync', () => {
 describe('map', () => {
   test('preorder', () => {
     const obj = {
-      a: {
-        b: 23,
-        c: 24,
-      },
-      d: {
-        e: 'Bob',
-        f: [10, null, 30, [31, undefined, 32], 40],
-      },
+      a: { b: 23, c: 24 },
+      d: { e: 'Bob', f: [10, null, 30, [31, undefined, 32], 40] },
       g: [25, '', { h: [null, 26, 27] }],
       i: 'Frank',
     }
@@ -718,9 +648,7 @@ describe('map', () => {
       additionalProperties: false,
       required: ['name'],
       properties: {
-        _id: {
-          bsonType: 'objectId',
-        },
+        _id: { bsonType: 'objectId' },
         name: { bsonType: 'string' },
         addresses: {
           bsonType: 'array',
@@ -779,15 +707,9 @@ describe('map', () => {
   })
   test('postorder', () => {
     const obj = {
-      bob: {
-        scores: ['87', 'x97', 95, false],
-      },
-      joe: {
-        scores: [92, 92.5, '73.2', ''],
-      },
-      frank: {
-        scores: ['abc', ''],
-      },
+      bob: { scores: ['87', 'x97', 95, false] },
+      joe: { scores: [92, 92.5, '73.2', ''] },
+      frank: { scores: ['abc', ''] },
     }
     const result = map(
       obj,
@@ -823,15 +745,9 @@ describe('map', () => {
   })
   test('custom shouldSkip fn', () => {
     const obj = {
-      bob: {
-        scores: ['87', 'x97', 95, false],
-      },
-      joe: {
-        scores: [92, 92.5, '73.2', ''],
-      },
-      frank: {
-        scores: ['abc', ''],
-      },
+      bob: { scores: ['87', 'x97', 95, false] },
+      joe: { scores: [92, 92.5, '73.2', ''] },
+      frank: { scores: ['abc', ''] },
     }
     const shouldSkip = (val: any, node: Node) =>
       _.isEmpty(val) && !parentIsArray(node)
@@ -853,16 +769,8 @@ describe('map', () => {
   })
   test('exclude nodes', () => {
     const obj = {
-      joe: {
-        age: 42,
-        username: 'joe blow',
-        password: '1234',
-      },
-      frank: {
-        age: 39,
-        username: 'frankenstein',
-        password: 'password',
-      },
+      joe: { age: 42, username: 'joe blow', password: '1234' },
+      frank: { age: 39, username: 'frankenstein', password: 'password' },
     }
     const result = map(obj, ({ key, val }) => {
       if (key !== 'password') {
@@ -877,15 +785,9 @@ describe('map', () => {
   })
   test('map while modifying in place', () => {
     const obj = {
-      bob: {
-        scores: ['87', 'x97', 95, false],
-      },
-      joe: {
-        scores: [92, 92.5, '73.2', ''],
-      },
-      frank: {
-        scores: ['abc', ''],
-      },
+      bob: { scores: ['87', 'x97', 95, false] },
+      joe: { scores: [92, 92.5, '73.2', ''] },
+      frank: { scores: ['abc', ''] },
     }
     const result = map(
       obj,
@@ -909,16 +811,7 @@ describe('map', () => {
 
 describe('mapLeaves', () => {
   test('should increment leave values', () => {
-    const obj = {
-      a: {
-        b: 23,
-        c: 24,
-      },
-      d: {
-        e: 100,
-        f: [10, 20, 30],
-      },
-    }
+    const obj = { a: { b: 23, c: 24 }, d: { e: 100, f: [10, 20, 30] } }
     const result = mapLeaves(obj, ({ val }) => val + 1)
     expect(obj).toEqual(obj)
     expect(result).toEqual({
@@ -927,16 +820,7 @@ describe('mapLeaves', () => {
     })
   })
   test('should modify in place', () => {
-    const obj = {
-      a: {
-        b: 23,
-        c: 24,
-      },
-      d: {
-        e: 100,
-        f: [10, 20, 30],
-      },
-    }
+    const obj = { a: { b: 23, c: 24 }, d: { e: 100, f: [10, 20, 30] } }
     const result = mapLeaves(obj, ({ val }) => val + 1, { modifyInPlace: true })
     expect(obj).toBe(result)
     expect(result).toEqual({
@@ -949,14 +833,8 @@ describe('mapLeaves', () => {
 describe('flatten', () => {
   test('should flatten object', () => {
     const obj = {
-      a: {
-        b: 23,
-        c: 24,
-      },
-      d: {
-        e: 100,
-        f: [10, 20, { g: 30, h: { i: 40 } }],
-      },
+      a: { b: 23, c: 24 },
+      d: { e: 100, f: [10, 20, { g: 30, h: { i: 40 } }] },
     }
     const result = flatten(obj)
     expect(result).toEqual({
@@ -971,14 +849,8 @@ describe('flatten', () => {
   })
   test('should flatten object with objectsOnly set to true', () => {
     const obj = {
-      a: {
-        b: 23,
-        c: 24,
-      },
-      d: {
-        e: 100,
-        f: [10, 20, { g: 30, h: { i: 40 } }],
-      },
+      a: { b: 23, c: 24 },
+      d: { e: 100, f: [10, 20, { g: 30, h: { i: 40 } }] },
     }
     const result = flatten(obj, { objectsOnly: true })
     expect(result).toEqual({
@@ -1015,9 +887,7 @@ describe('flatten', () => {
       additionalProperties: false,
       required: ['name', 'type'],
       properties: {
-        _id: {
-          bsonType: 'objectId',
-        },
+        _id: { bsonType: 'objectId' },
         name: { bsonType: 'string' },
         numberOfEmployees: {
           bsonType: 'string',
@@ -1054,12 +924,8 @@ describe('flatten', () => {
               bsonType: 'object',
               additionalProperties: true,
               properties: {
-                priceId: {
-                  bsonType: 'string',
-                },
-                subscriptionStatus: {
-                  bsonType: 'string',
-                },
+                priceId: { bsonType: 'string' },
+                subscriptionStatus: { bsonType: 'string' },
               },
             },
           },
@@ -1102,14 +968,8 @@ describe('unflatten', () => {
     }
     const result = unflatten(obj)
     expect(result).toEqual({
-      a: {
-        b: 23,
-        c: 24,
-      },
-      d: {
-        e: 100,
-        f: [10, 20, { g: 30, h: { i: 40 } }],
-      },
+      a: { b: 23, c: 24 },
+      d: { e: 100, f: [10, 20, { g: 30, h: { i: 40 } }] },
     })
   })
   test('should unflatten object with custom separator', () => {
@@ -1124,14 +984,8 @@ describe('unflatten', () => {
     }
     const result = unflatten(obj, { separator: '_' })
     expect(result).toEqual({
-      a: {
-        b: 23,
-        c: 24,
-      },
-      d: {
-        e: 100,
-        f: [10, 20, { g: 30, h: { i: 40 } }],
-      },
+      a: { b: 23, c: 24 },
+      d: { e: 100, f: [10, 20, { g: 30, h: { i: 40 } }] },
     })
   })
   test('should unflatten a nested array/object', () => {
@@ -1144,124 +998,54 @@ describe('unflatten', () => {
     ])
   })
   test('should preserve a non-flattened object', () => {
-    const obj = {
-      a: {
-        b: {
-          c: 10,
-          d: 20,
-        },
-        e: [30],
-      },
-    }
+    const obj = { a: { b: { c: 10, d: 20 }, e: [30] } }
     const result = unflatten(obj)
-    expect(result).toEqual({
-      a: {
-        b: {
-          c: 10,
-          d: 20,
-        },
-        e: [30],
-      },
-    })
+    expect(result).toEqual({ a: { b: { c: 10, d: 20 }, e: [30] } })
   })
 })
 
 describe('compact', () => {
   test('should remove undefined', () => {
-    const obj = {
-      a: {
-        b: undefined,
-      },
-      c: undefined,
-      d: 42,
-      e: [undefined],
-    }
+    const obj = { a: { b: undefined }, c: undefined, d: 42, e: [undefined] }
     const result = compact(obj, { removeUndefined: true })
     expect(result).toEqual({ a: {}, d: 42, e: [undefined] })
     // Objects are not the same
     expect(obj).not.toBe(result)
   })
   test('should remove null', () => {
-    const obj = {
-      a: {
-        b: null,
-      },
-      c: null,
-      d: 42,
-      e: [null],
-    }
+    const obj = { a: { b: null }, c: null, d: 42, e: [null] }
     const result = compact(obj, { removeNull: true })
     expect(result).toEqual({ a: {}, d: 42, e: [null] })
   })
   test('should remove empty string', () => {
-    const obj = {
-      a: {
-        b: '',
-      },
-      c: '',
-      d: 42,
-      e: [''],
-    }
+    const obj = { a: { b: '' }, c: '', d: 42, e: [''] }
     const result = compact(obj, { removeEmptyString: true })
     expect(result).toEqual({ a: {}, d: 42, e: [''] })
   })
   test('should remove false', () => {
-    const obj = {
-      a: {
-        b: false,
-      },
-      c: false,
-      d: 42,
-      e: [false],
-    }
+    const obj = { a: { b: false }, c: false, d: 42, e: [false] }
     const result = compact(obj, { removeFalse: true })
     expect(result).toEqual({ a: {}, d: 42, e: [false] })
   })
   test('should remove NaN', () => {
-    const obj = {
-      a: {
-        b: NaN,
-      },
-      c: NaN,
-      d: 42,
-      e: [NaN],
-    }
+    const obj = { a: { b: NaN }, c: NaN, d: 42, e: [NaN] }
     const result = compact(obj, { removeNaN: true })
     expect(result).toEqual({ a: {}, d: 42, e: [NaN] })
   })
   test('should remove using remove fn', () => {
-    const obj = {
-      a: {
-        b: 'null',
-      },
-      c: 'null',
-      d: 42,
-      e: ['null'],
-    }
+    const obj = { a: { b: 'null' }, c: 'null', d: 42, e: ['null'] }
     const result = compact(obj, { removeFn: (val: any) => val === 'null' })
     expect(result).toEqual({ a: {}, d: 42, e: ['null'] })
   })
   test('should remove using remove fn based on second param', () => {
-    const obj = {
-      a: {
-        b: 'null',
-      },
-      c: 'null',
-    }
+    const obj = { a: { b: 'null' }, c: 'null' }
     const result = compact(obj, {
       removeFn: (_val: any, node: Node) => _.isEqual(node.path, ['a', 'b']),
     })
     expect(result).toEqual({ a: {}, c: 'null' })
   })
   test('should remove array elem using remove fn based on second param', () => {
-    const obj = {
-      joe: {
-        grades: [90, 85, 92],
-      },
-      bob: {
-        grades: [89, 87, 94],
-      },
-    }
+    const obj = { joe: { grades: [90, 85, 92] }, bob: { grades: [89, 87, 94] } }
     const result = compact(obj, {
       removeFn: (_val: any, node: Node) => node.key === '0',
       compactArrays: true,
@@ -1272,46 +1056,22 @@ describe('compact', () => {
     })
   })
   test('should remove empty object', () => {
-    const obj = {
-      a: {
-        b: {},
-      },
-      c: {},
-      d: 42,
-    }
+    const obj = { a: { b: {} }, c: {}, d: 42 }
     const result = compact(obj, { removeEmptyObject: true })
     expect(result).toEqual({ d: 42 })
   })
   test('should remove empty array', () => {
-    const obj = {
-      a: {
-        b: [],
-      },
-      c: [],
-      d: 42,
-    }
+    const obj = { a: { b: [] }, c: [], d: 42 }
     const result = compact(obj, { removeEmptyArray: true })
     expect(result).toEqual({ a: {}, d: 42 })
   })
   test('should compact arrays', () => {
-    const obj = {
-      a: {
-        b: [null, null],
-      },
-      c: [],
-      d: [42, null, ''],
-    }
+    const obj = { a: { b: [null, null] }, c: [], d: [42, null, ''] }
     const result = compact(obj, { removeNull: true, compactArrays: true })
     expect(result).toEqual({ a: { b: [] }, c: [], d: [42, ''] })
   })
   test('should compact and remove empty arrays', () => {
-    const obj = {
-      a: {
-        b: [null, null],
-      },
-      c: [],
-      d: [42, null],
-    }
+    const obj = { a: { b: [null, null] }, c: [], d: [42, null] }
     const result = compact(obj, {
       removeNull: true,
       compactArrays: true,
@@ -1333,18 +1093,10 @@ describe('compact', () => {
   })
   test('should compact all the things', () => {
     const obj = {
-      a: {
-        b: [null, null, 21, '', { b1: null }, { b2: 26 }],
-      },
+      a: { b: [null, null, 21, '', { b1: null }, { b2: 26 }] },
       c: [],
       d: [42, null],
-      e: {
-        f: {
-          g: '',
-          h: undefined,
-          i: 'null',
-        },
-      },
+      e: { f: { g: '', h: undefined, i: 'null' } },
     }
     const result = compact(obj, {
       removeUndefined: true,
@@ -1355,20 +1107,10 @@ describe('compact', () => {
       removeEmptyObject: true,
       removeFn: (val: any) => val === 'null',
     })
-    expect(result).toEqual({
-      a: { b: [21, { b2: 26 }] },
-      d: [42],
-    })
+    expect(result).toEqual({ a: { b: [21, { b2: 26 }] }, d: [42] })
   })
   test('should compact while modifying object in place', () => {
-    const obj = {
-      a: {
-        b: undefined,
-      },
-      c: undefined,
-      d: 42,
-      e: [undefined],
-    }
+    const obj = { a: { b: undefined }, c: undefined, d: 42, e: [undefined] }
     const result = compact(obj, { removeUndefined: true, modifyInPlace: true })
     expect(result).toEqual({ a: {}, d: 42, e: [undefined] })
     // Objects are the same
@@ -1378,54 +1120,23 @@ describe('compact', () => {
 
 describe('truncate', () => {
   test('should truncate depth 1', () => {
-    const obj = {
-      a: {
-        b: 'Frank',
-      },
-      c: 'Bob',
-      d: 42,
-      e: null,
-    }
+    const obj = { a: { b: 'Frank' }, c: 'Bob', d: 42, e: null }
     const result = truncate(obj, { maxDepth: 1 })
-    expect(result).toEqual({
-      a: '[Truncated]',
-      c: 'Bob',
-      d: 42,
-      e: null,
-    })
+    expect(result).toEqual({ a: '[Truncated]', c: 'Bob', d: 42, e: null })
     // Objects are not the same
     expect(obj).not.toBe(result)
   })
   test('should truncate depth 2', () => {
-    const obj = {
-      a: {
-        b: 'Frank',
-        c: {
-          d: 'Joe',
-        },
-        e: null,
-      },
-      f: 42,
-    }
+    const obj = { a: { b: 'Frank', c: { d: 'Joe' }, e: null }, f: 42 }
     const result = truncate(obj, { maxDepth: 2 })
     expect(result).toEqual({
-      a: {
-        b: 'Frank',
-        c: '[Truncated]',
-        e: null,
-      },
+      a: { b: 'Frank', c: '[Truncated]', e: null },
       f: 42,
     })
   })
   test('should truncate arrays', () => {
     const obj = {
-      a: {
-        b: 'Frank',
-        c: {
-          d: ['Bob', { name: 'Joe' }, 'Tom'],
-        },
-        e: null,
-      },
+      a: { b: 'Frank', c: { d: ['Bob', { name: 'Joe' }, 'Tom'] }, e: null },
       f: 42,
     }
     const result = truncate(obj, { maxDepth: 4 })
@@ -1435,38 +1146,14 @@ describe('truncate', () => {
     })
   })
   test('should allow custom replacement text', () => {
-    const obj = {
-      a: {
-        b: 'Frank',
-      },
-      c: 'Bob',
-      d: 42,
-      e: null,
-    }
+    const obj = { a: { b: 'Frank' }, c: 'Bob', d: 42, e: null }
     const result = truncate(obj, { maxDepth: 1, replacementAtMaxDepth: null })
-    expect(result).toEqual({
-      a: null,
-      c: 'Bob',
-      d: 42,
-      e: null,
-    })
+    expect(result).toEqual({ a: null, c: 'Bob', d: 42, e: null })
   })
   test('should truncate and modify object in place', () => {
-    const obj = {
-      a: {
-        b: 'Frank',
-      },
-      c: 'Bob',
-      d: 42,
-      e: null,
-    }
+    const obj = { a: { b: 'Frank' }, c: 'Bob', d: 42, e: null }
     const result = truncate(obj, { maxDepth: 1, modifyInPlace: true })
-    expect(result).toEqual({
-      a: '[Truncated]',
-      c: 'Bob',
-      d: 42,
-      e: null,
-    })
+    expect(result).toEqual({ a: '[Truncated]', c: 'Bob', d: 42, e: null })
     // Objects are the same
     expect(obj).toBe(result)
   })
@@ -1482,9 +1169,7 @@ describe('truncate', () => {
     const context = { a: { b: { c: { d: 'missing' } } } }
     const error = new ValidationError('failure', context)
 
-    const obj = {
-      error,
-    }
+    const obj = { error }
     const result = truncate(obj, { maxDepth: 5, transformErrors: true })
     expect(result).toMatchObject({
       error: {
@@ -1515,26 +1200,12 @@ describe('truncate', () => {
     })
   })
   test('should truncate strings', () => {
-    const obj = {
-      a: {
-        b: '1234567890',
-      },
-      c: '123',
-      d: 42,
-      e: null,
-    }
+    const obj = { a: { b: '1234567890' }, c: '123', d: 42, e: null }
     const result = truncate(obj, { maxStringLength: 5 })
     expect(result).toEqual({ a: { b: '12345...' }, c: '123', d: 42, e: null })
   })
   test('should truncate strings with custom replacement text', () => {
-    const obj = {
-      a: {
-        b: '1234567890',
-      },
-      c: '123',
-      d: 42,
-      e: null,
-    }
+    const obj = { a: { b: '1234567890' }, c: '123', d: 42, e: null }
     const result = truncate(obj, {
       maxStringLength: 5,
       replacementAtMaxStringLength: '',
@@ -1542,14 +1213,7 @@ describe('truncate', () => {
     expect(result).toEqual({ a: { b: '12345' }, c: '123', d: 42, e: null })
   })
   test('should truncate strings with custom replacement function', () => {
-    const obj = {
-      a: {
-        b: '1234567890',
-      },
-      c: '123',
-      d: 42,
-      e: null,
-    }
+    const obj = { a: { b: '1234567890' }, c: '123', d: 42, e: null }
     const result = truncate(obj, {
       maxStringLength: 5,
       replacementAtMaxStringLength: (input: string) =>
@@ -1563,68 +1227,38 @@ describe('truncate', () => {
     })
   })
   test('should truncate arrays', () => {
-    const obj = {
-      a: [1, 2, 3, 4, 5],
-      c: '123',
-      d: [1, 2],
-      e: null,
-    }
+    const obj = { a: [1, 2, 3, 4, 5], c: '123', d: [1, 2], e: null }
     const result = truncate(obj, { maxArrayLength: 3 })
-    expect(result).toEqual({
-      a: [1, 2, 3],
-      c: '123',
-      d: [1, 2],
-      e: null,
-    })
+    expect(result).toEqual({ a: [1, 2, 3], c: '123', d: [1, 2], e: null })
   })
 })
 
 describe('size', () => {
   test('should return number of bytes for strings', () => {
-    const obj = {
-      a: {
-        b: 'hello',
-      },
-    }
+    const obj = { a: { b: 'hello' } }
     const result = size(obj)
     expect(result).toBe(10)
   })
   test('should return number of bytes for symbols', () => {
-    const obj = {
-      a: {
-        b: Symbol('hello'),
-      },
-    }
+    const obj = { a: { b: Symbol('hello') } }
     const result = size(obj)
     expect(result).toBe(10)
   })
   test('should return number of bytes for booleans', () => {
-    const obj = {
-      a: {
-        b: [true, false],
-      },
-    }
+    const obj = { a: { b: [true, false] } }
     const result = size(obj)
     expect(result).toBe(8)
   })
   test('should return number of bytes for numbers', () => {
-    const obj = {
-      a: {
-        b: [42, 10n],
-      },
-    }
+    const obj = { a: { b: [42, 10n] } }
     const result = size(obj)
     expect(result).toBe(16)
   })
   test('should return number of bytes for mixed types', () => {
     const obj = {
-      a: {
-        b: 'hello',
-      },
+      a: { b: 'hello' },
       c: Symbol('hello'),
-      d: {
-        e: [true, false],
-      },
+      d: { e: [true, false] },
       f: [42, 10n],
     }
     const result = size(obj)
@@ -1639,12 +1273,164 @@ describe('size', () => {
     expect(result).toBe(16)
   })
   test('should return 0 bytes if there are no leaf nodes', () => {
-    const obj = {
-      a: {
-        b: {},
-      },
-    }
+    const obj = { a: { b: {} } }
     const result = size(obj)
     expect(result).toBe(0)
+  })
+})
+
+describe('exclude', () => {
+  test('should exclude a simple path', () => {
+    const obj = { a: 1, b: 2, c: 3 }
+    const result = exclude(obj, ['b'])
+    expect(result).toEqual({ a: 1, c: 3 })
+  })
+
+  test('should exclude nested paths', () => {
+    const obj = { a: { b: 23, c: 24 }, d: { e: 'Bob', f: 'Alice' } }
+    const result = exclude(obj, ['a.b', 'd.e'])
+    expect(result).toEqual({ a: { c: 24 }, d: { f: 'Alice' } })
+  })
+
+  test('should exclude paths with star patterns in arrays', () => {
+    const obj = {
+      documents: [
+        { fileName: 'doc1.txt', size: 100 },
+        { fileName: 'doc2.txt', size: 200 },
+        { fileName: 'doc3.txt', size: 300 },
+      ],
+    }
+    const result = exclude(obj, ['documents.*.fileName'])
+    expect(result).toEqual({
+      documents: [{ size: 100 }, { size: 200 }, { size: 300 }],
+    })
+  })
+
+  test('should exclude multiple paths with star patterns', () => {
+    const obj = {
+      users: [
+        { name: 'Alice', password: 'secret1', email: 'alice@example.com' },
+        { name: 'Bob', password: 'secret2', email: 'bob@example.com' },
+      ],
+      admin: { name: 'Admin', password: 'admin123' },
+    }
+    const result = exclude(obj, ['users.*.password', 'admin.password'])
+    expect(result).toEqual({
+      users: [
+        { name: 'Alice', email: 'alice@example.com' },
+        { name: 'Bob', email: 'bob@example.com' },
+      ],
+      admin: { name: 'Admin' },
+    })
+  })
+
+  test('should handle star patterns at different levels', () => {
+    const obj = {
+      level1: {
+        level2a: { target: 'remove1', keep: 'keep1' },
+        level2b: { target: 'remove2', keep: 'keep2' },
+      },
+    }
+    const result = exclude(obj, ['level1.*.target'])
+    expect(result).toEqual({
+      level1: { level2a: { keep: 'keep1' }, level2b: { keep: 'keep2' } },
+    })
+  })
+
+  test('should not modify original object by default', () => {
+    const obj = { a: 1, b: 2, c: 3 }
+    const result = exclude(obj, ['b'])
+    expect(obj).toEqual({ a: 1, b: 2, c: 3 })
+    expect(result).toEqual({ a: 1, c: 3 })
+  })
+
+  test('should modify in place when modifyInPlace is true', () => {
+    const obj = { a: 1, b: 2, c: 3 }
+    const result = exclude(obj, ['b'], { modifyInPlace: true })
+    expect(obj).toEqual({ a: 1, c: 3 })
+    expect(result).toBe(obj)
+  })
+
+  test('should handle empty paths array', () => {
+    const obj = { a: 1, b: 2 }
+    const result = exclude(obj, [])
+    expect(result).toEqual({ a: 1, b: 2 })
+  })
+
+  test('should handle non-matching patterns', () => {
+    const obj = { a: 1, b: 2 }
+    const result = exclude(obj, ['c', 'd.e'])
+    expect(result).toEqual({ a: 1, b: 2 })
+  })
+
+  test('should handle multiple star patterns', () => {
+    const obj = {
+      users: [
+        { posts: [{ title: 'Post 1', secret: 'hidden1' }] },
+        { posts: [{ title: 'Post 2', secret: 'hidden2' }] },
+      ],
+    }
+    const result = exclude(obj, ['users.*.posts.*.secret'])
+    expect(result).toEqual({
+      users: [
+        { posts: [{ title: 'Post 1' }] },
+        { posts: [{ title: 'Post 2' }] },
+      ],
+    })
+  })
+
+  test('should support prefix matching', () => {
+    const obj = {
+      documents: {
+        fileName: 'test.txt',
+        size: 100,
+        metadata: { author: 'John', created: '2024-01-01' },
+      },
+      users: [
+        { name: 'Alice', email: 'alice@example.com' },
+        { name: 'Bob', email: 'bob@example.com' },
+      ],
+    }
+    const result = exclude(obj, ['documents'])
+    expect(result).toEqual({
+      users: [
+        { name: 'Alice', email: 'alice@example.com' },
+        { name: 'Bob', email: 'bob@example.com' },
+      ],
+    })
+  })
+
+  test('should support prefix matching with nested paths', () => {
+    const obj = {
+      documents: {
+        fileName: 'test.txt',
+        size: 100,
+        metadata: { author: 'John', created: '2024-01-01' },
+      },
+      settings: { theme: 'dark' },
+    }
+    const result = exclude(obj, ['documents.metadata'])
+    expect(result).toEqual({
+      documents: { fileName: 'test.txt', size: 100 },
+      settings: { theme: 'dark' },
+    })
+  })
+
+  test('should support prefix matching with arrays', () => {
+    const obj = {
+      documents: [
+        { fileName: 'doc1.txt', size: 100, metadata: { author: 'Alice' } },
+        { fileName: 'doc2.txt', size: 200, metadata: { author: 'Bob' } },
+      ],
+      settings: { theme: 'dark' },
+    }
+    const result = exclude(obj, ['documents.*.metadata'])
+    expect(result).toEqual({
+      documents: [
+        { fileName: 'doc1.txt', size: 100 },
+        { fileName: 'doc2.txt', size: 200 },
+      ],
+      settings: { theme: 'dark' },
+    })
   })
 })
