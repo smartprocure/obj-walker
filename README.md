@@ -700,7 +700,7 @@ size(obj)
 ## exclude
 
 ```typescript
-exclude(obj: object, paths: string[], options?: MapOptions & MutationOption) => object
+exclude(obj: object, paths: string[], options?: MutationOption) => object
 ```
 
 Exclude paths from an object. Supports star patterns where `*` matches
