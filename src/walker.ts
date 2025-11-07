@@ -553,5 +553,5 @@ export const exclude: Exclude = (obj, paths, options = {}) => {
     return val
   }
 
-  return map(obj, mapper, { ...options, postOrder: true })
+  return map(obj, mapper, options)
 }
