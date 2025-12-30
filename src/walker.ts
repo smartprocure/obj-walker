@@ -283,7 +283,7 @@ export const findNode: FindNode = (obj, findFn, options = {}) => {
   return node
 }
 
-const chunkPath = (path: string[], separator: string) => {
+export const chunkPath = (path: string[], separator: string) => {
   let nestedPath: string[] = []
   const chunkedPath = []
   const addNestedPath = () => {
@@ -293,7 +293,8 @@ const chunkPath = (path: string[], separator: string) => {
     }
   }
   for (const key of path) {
-    if (/[0-9]+/.test(key)) {
+    const isKeyOnlyNumbers = /^[0-9]+$/.test(key)
+    if (isKeyOnlyNumbers) {
       addNestedPath()
       chunkedPath.push(key)
     } else {

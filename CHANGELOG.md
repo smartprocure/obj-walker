@@ -1,3 +1,7 @@
+# 2.5.1
+- `chunkPath` - Exported utility function for chunking paths, joining consecutive non-numeric keys and keeping numeric keys separate.
+- Fixed `chunkPath` regex to match only keys that are entirely numeric (not keys containing numbers).
+
 # 2.5.0
 
 - `exclude` - Exclude one or more paths, optionally using star patterns, from an object.
