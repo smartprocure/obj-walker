@@ -4,6 +4,7 @@ import { describe, expect, test } from 'vitest'
 import { Node } from './types'
 import { parentIsArray } from './util'
 import {
+  chunkPath,
   compact,
   exclude,
   findNode,
@@ -1432,5 +1433,28 @@ describe('exclude', () => {
       ],
       settings: { theme: 'dark' },
     })
+  })
+})
+
+describe('chunkPath', () => {
+  const separator = '.'
+  test('should return empty array for empty path', () => {
+    expect(chunkPath([], separator)).toEqual([])
+  })
+
+  test('should join consecutive non-numeric keys', () => {
+    expect(chunkPath(['a', 'b', 'c'], separator)).toEqual(['a.b.c'])
+  })
+
+  test('should keep numeric keys as separate chunks', () => {
+    expect(chunkPath(['a', 'b', '0'], separator)).toEqual(['a.b', '0'])
+    expect(chunkPath(['0', 'a', 'b'], separator)).toEqual(['0', 'a.b'])
+    expect(chunkPath(['a', '0', 'b'], separator)).toEqual(['a', '0', 'b'])
+  })
+
+  test('should handle keys that contain numbers', () => {
+    expect(chunkPath(['a1', 'b2'], separator)).toEqual(['a1.b2'])
+    expect(chunkPath(['1a', '2b'], separator)).toEqual(['1a.2b'])
+    expect(chunkPath(['a1b', 'c2d'], separator)).toEqual(['a1b.c2d'])
   })
 })
