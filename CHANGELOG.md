@@ -1,3 +1,7 @@
+# 2.5.1
+
+- Fixed issue with `flatten` and the `objectsOnly` option when keys contained alpha and numeric characters.
+
 # 2.5.0
 
 - `exclude` - Exclude one or more paths, optionally using star patterns, from an object.
