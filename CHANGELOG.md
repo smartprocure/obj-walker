@@ -1,6 +1,6 @@
 # 2.5.1
-- `chunkPath` - Exported utility function for chunking paths, joining consecutive non-numeric keys and keeping numeric keys separate.
-- Fixed `chunkPath` regex to match only keys that are entirely numeric (not keys containing numbers).
+
+- Fixed issue with `flatten` and the `objectsOnly` option when keys contained alpha and numeric characters.
 
 # 2.5.0
 

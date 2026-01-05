@@ -851,14 +851,14 @@ describe('flatten', () => {
   test('should flatten object with objectsOnly set to true', () => {
     const obj = {
       a: { b: 23, c: 24 },
-      d: { e: 100, f: [10, 20, { g: 30, h: { i: 40 } }] },
+      d1: { e: 100, f: [10, 20, { g: 30, h: { i: 40 } }] },
     }
     const result = flatten(obj, { objectsOnly: true })
     expect(result).toEqual({
       'a.b': 23,
       'a.c': 24,
-      'd.e': 100,
-      'd.f': [10, 20, { g: 30, 'h.i': 40 }],
+      'd1.e': 100,
+      'd1.f': [10, 20, { g: 30, 'h.i': 40 }],
     })
   })
   test('should flatten array', () => {
