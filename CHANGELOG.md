@@ -1,3 +1,7 @@
+# 2.5.2
+
+- `walker` - Stop iterating remaining siblings after a short-circuit, avoiding unnecessary `traverse` calls.
+
 # 2.5.1
 
 - Fixed issue with `flatten` and the `objectsOnly` option when keys contained alpha and numeric characters.

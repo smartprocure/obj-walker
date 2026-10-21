@@ -2,7 +2,7 @@ import _ from 'lodash/fp'
 import { describe, expect, test } from 'vitest'
 
 import { Node } from './types'
-import { parentIsArray } from './util'
+import { defTraverse, parentIsArray } from './util'
 import {
   chunkPath,
   compact,
@@ -56,6 +56,48 @@ describe('walker', () => {
     }
     walker(obj, walkFn)
     expect(numNodesVisited).toBe(4)
+  })
+  test('should visit ancestors after short-circuit when postorder', () => {
+    const obj = { a: { b: 23, c: 24, d: { e: 25 } }, f: 26 }
+    const paths: string[][] = []
+    const walkFn = ({ path, val }: Node) => {
+      paths.push(path)
+      if (val === 24) {
+        return SHORT_CIRCUIT
+      }
+    }
+    walker(obj, walkFn, { postOrder: true })
+    expect(paths).toEqual([['a', 'b'], ['a', 'c'], ['a'], []])
+  })
+  test('should not traverse siblings after short-circuit', () => {
+    const obj = { a: { b: { x: 1 }, c: { y: 2 }, d: { z: 3 } }, e: { w: 4 } }
+    const traversed: any[] = []
+    const traverse = (x: any) => {
+      traversed.push(x)
+      return defTraverse(x)
+    }
+    const walkFn = ({ path }: Node) => {
+      if (_.isEqual(path, ['a', 'b'])) {
+        return SHORT_CIRCUIT
+      }
+    }
+    walker(obj, walkFn, { traverse })
+    expect(traversed).toEqual([obj, obj.a, obj.a, obj.a.b])
+  })
+  test('should not traverse siblings after short-circuit when postorder', () => {
+    const obj = { a: { b: { x: 1 }, c: { y: 2 } }, d: { z: 3 } }
+    const traversed: any[] = []
+    const traverse = (x: any) => {
+      traversed.push(x)
+      return defTraverse(x)
+    }
+    const walkFn = ({ path }: Node) => {
+      if (_.isEqual(path, ['a', 'b', 'x'])) {
+        return SHORT_CIRCUIT
+      }
+    }
+    walker(obj, walkFn, { traverse, postOrder: true })
+    expect(traversed).toEqual([obj, obj.a, obj.a, obj.a.b, obj.a.b, 1, 1])
   })
 })
 

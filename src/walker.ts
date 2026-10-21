@@ -83,6 +83,7 @@ export const walker: Walker = (obj, walkFn, options = {}) => {
     const next = traverse(val) || []
     for (const entry of Object.entries(next)) {
       _walk(nextNode(node, entry, isLeaf))
+      if (shortCircuit) break
     }
     // Postorder
     if (postOrder) {
